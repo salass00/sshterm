@@ -1,0 +1,53 @@
+SSHTerm is SSH client with a built in (xterm-256color) terminal emulation
+based on an enhanced version of libtsm.
+
+Requirements:
+
+- AmigaOS 4.1 update 6 or newer
+
+- AmiSSL 4.3 (https://github.com/jens-maus/amissl/releases).
+
+Usage:
+
+Run from CLI with commandline template:
+
+HOSTADDR/A,PORT/N/K,USER/A,PASSWORD,NOSSHAGENT/S,KEYFILE/K,MAXSB/N/K
+
+HOSTADDR is the IP address or domain name of the SSH server.
+
+PORT is the port number (defaults to 22).
+
+USER is the user name.
+
+PASSWORD is the login password or key file passphrase depending on the
+authentication method used. If this argument is left out a password requester
+will be used instead.
+
+NOSSHAGENT stops filesystem from attempting to connect to ssh-agent.
+
+KEYFILE can be used to change the key file used for public key authentication
+(defaults to "$HOME/.ssh/id_rsa" or "HOME:.ssh/id_rsa").
+
+MAXSB is the maximum number of lines stored in the scrollback buffer (set to
+zero to disable this feature). The default value is 2000 lines.
+
+Known issues:
+
+- If the backspace key is not working correctly in the sudo password prompt it
+  might be that the remote terminal is set to expect a different sequence for
+  erase than ^H which is what libtsm is sending (you can check using
+  "stty -a"). If so you can fix this by typing "stty erase ^H" in the client
+  terminal.
+
+To Do:
+
+- Implement a configuration GUI so that running from CLI is no longer needed.
+
+- Implement full unicode support using the outline font engine API.
+
+Source code:
+
+The full source code of SSHTerm is available under GPL license on github:
+
+https://github.com/salass00/sshterm
+

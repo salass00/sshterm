@@ -1,0 +1,10 @@
+# Ignore object and archive files
+*.[oa]
+# Ignore libssh2 generated files
+libssh2-1.9.0/obj
+# Ignore ssh2fs generated files
+obj
+SSHTerm
+SSHTerm.debug
+# Ignore release archives
+*.7z
