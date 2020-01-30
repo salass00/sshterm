@@ -271,6 +271,17 @@ int sshterm(int argc, char **argv)
 		auth_pw |= AUTH_PUBLICKEY;
 	}
 
+	if (args[ARG_KEYFILE])
+	{
+		/* Force public key authentication if the KEYFILE argument is specified
+		 * and this method is supported by the SSH server.
+		 */
+		if (auth_pw & AUTH_PUBLICKEY)
+		{
+			auth_pw = AUTH_PUBLICKEY;
+		}
+	}
+
 	if (auth_pw == 0)
 	{
 		fprintf(stderr, "No supported authentication methods\n");
