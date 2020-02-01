@@ -169,7 +169,7 @@ struct tsm_vte {
 	int csi_argv[CSI_ARG_MAX];
 	unsigned int csi_flags;
 
-	uint8_t (*palette)[3];
+	const uint8_t (*palette)[3];
 	struct tsm_screen_attr def_attr;
 	struct tsm_screen_attr cattr;
 	unsigned int flags;
@@ -210,7 +210,7 @@ enum vte_color {
 	COLOR_NUM
 };
 
-static uint8_t color_palette[COLOR_NUM][3] = {
+static const uint8_t color_palette[COLOR_NUM][3] = {
 	[COLOR_BLACK]         = {   0,   0,   0 }, /* black */
 	[COLOR_RED]           = { 205,   0,   0 }, /* red */
 	[COLOR_GREEN]         = {   0, 205,   0 }, /* green */
@@ -232,7 +232,7 @@ static uint8_t color_palette[COLOR_NUM][3] = {
 	[COLOR_BACKGROUND]    = {   0,   0,   0 }, /* black */
 };
 
-static uint8_t color_palette_solarized[COLOR_NUM][3] = {
+static const uint8_t color_palette_solarized[COLOR_NUM][3] = {
 	[COLOR_BLACK]         = {   7,  54,  66 }, /* black */
 	[COLOR_RED]           = { 220,  50,  47 }, /* red */
 	[COLOR_GREEN]         = { 133, 153,   0 }, /* green */
@@ -254,7 +254,7 @@ static uint8_t color_palette_solarized[COLOR_NUM][3] = {
 	[COLOR_BACKGROUND]    = {   7,  54,  66 }, /* black */
 };
 
-static uint8_t color_palette_solarized_black[COLOR_NUM][3] = {
+static const uint8_t color_palette_solarized_black[COLOR_NUM][3] = {
 	[COLOR_BLACK]         = {   0,   0,   0 }, /* black */
 	[COLOR_RED]           = { 220,  50,  47 }, /* red */
 	[COLOR_GREEN]         = { 133, 153,   0 }, /* green */
@@ -276,7 +276,7 @@ static uint8_t color_palette_solarized_black[COLOR_NUM][3] = {
 	[COLOR_BACKGROUND]    = {   0,   0,   0 }, /* black */
 };
 
-static uint8_t color_palette_solarized_white[COLOR_NUM][3] = {
+static const uint8_t color_palette_solarized_white[COLOR_NUM][3] = {
 	[COLOR_BLACK]         = {   7,  54,  66 }, /* black */
 	[COLOR_RED]           = { 220,  50,  47 }, /* red */
 	[COLOR_GREEN]         = { 133, 153,   0 }, /* green */
@@ -298,7 +298,7 @@ static uint8_t color_palette_solarized_white[COLOR_NUM][3] = {
 	[COLOR_BACKGROUND]    = { 238, 232, 213 }, /* light grey */
 };
 
-static uint8_t (*get_palette(struct tsm_vte *vte))[3]
+static const uint8_t (*get_palette(struct tsm_vte *vte))[3]
 {
 	if (!vte->palette_name)
 		return color_palette;
