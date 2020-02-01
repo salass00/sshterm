@@ -507,6 +507,13 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 			case TERM_ResizeHook:
 				td->td_ResizeHook = (struct Hook *)tag->ti_Data;
 				break;
+
+			case TERM_Palette:
+				tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data);
+				/* Force a complete refresh */
+				refresh = TRUE;
+				td->td_Age = 0;
+				break;
 		}
 	}
 

@@ -36,6 +36,7 @@
 #define TERM_SBVisible     (TERM_Dummy + 8)
 #define TERM_SBTotal       (TERM_Dummy + 9)
 #define TERM_ResizeHook    (TERM_Dummy + 10)
+#define TERM_Palette       (TERM_Dummy + 11)
 
 struct TermOutputHookMsg
 {
