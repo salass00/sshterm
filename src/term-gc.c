@@ -96,6 +96,15 @@ struct TermData
 	ULONG              td_SBTotal;
 	Object            *td_Scroller;
 	LONG               td_ScrollDelta;
+	UWORD              td_MinY;
+	UWORD              td_MaxY;
+
+	#ifdef OFFSCREEN_BUFFER
+	struct Layer_Info *td_TmpLayerInfo;
+	struct RastPort    td_TmpRP;
+	struct Screen     *td_TmpScreen;
+	ULONG              td_TmpSize;
+	#endif
 
 	#ifdef DEBUG
 	ULONG              td_SkipCount;
@@ -253,12 +262,6 @@ static void tsm_write_cb(struct tsm_vte *vte, const char *u8,
 	}
 }
 
-static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
-                       const uint32_t *ch, size_t len, unsigned int width,
-                       unsigned int posx, unsigned int posy,
-                       const struct tsm_screen_attr *attr, tsm_age_t age,
-                       void *data);
-
 static ULONG TERM_new(Class *cl, Object *obj, struct opSet *ops)
 {
 	obj = (Object *)IIntuition->IDoSuperMethodA(cl, obj, (Msg)ops);
@@ -320,6 +323,19 @@ static ULONG TERM_dispose(Class *cl, Object *obj, Msg msg)
 {
 	struct TermData *td = INST_DATA(cl, obj);
 	ULONG result;
+
+	#ifdef OFFSCREEN_BUFFER
+	if (td->td_TmpRP.BitMap != NULL)
+	{
+		ILayers->DeleteLayer(0, td->td_TmpRP.Layer);
+		ILayers->DisposeLayerInfo(td->td_TmpLayerInfo);
+		IGraphics->FreeBitMap(td->td_TmpRP.BitMap);
+
+		td->td_TmpLayerInfo = NULL;
+		td->td_TmpRP.BitMap = NULL;
+		td->td_TmpRP.Layer = NULL;
+	}
+	#endif
 
 	if (td->td_VTE != NULL)
 	{
@@ -495,6 +511,9 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 					tsm_screen_sb_down(td->td_Con, top - td->td_SBTop);
 
 				scroll = top - td->td_SBTop;
+
+				if (ABS(scroll) >= td->td_Rows)
+					refresh = TRUE;
 
 				td->td_SBTop = top;
 
@@ -689,47 +708,27 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
                        void *data)
 {
 	struct TermData *td = data;
-	struct RastPort *rp = td->td_RPort;
-	LONG scroll;
+	struct RastPort *rp;
 	ULONG f_argb, b_argb;
 	UWORD cellw, cellh;
 	UWORD x, y;
 	ULONG style;
 	TEXT tmp[1];
 
-	scroll = td->td_ScrollDelta;
-	if (scroll != 0)
+	if (posy < td->td_MinY || posy > td->td_MaxY)
 	{
-		if (scroll < 0)
-		{
-			if (posy >= -scroll)
-			{
-				#ifdef DEBUG
-				td->td_SkipCount++;
-				#endif
-				return 0;
-			}
-		}
-		else
-		{
-			if (posy < (td->td_Rows - scroll))
-			{
-				#ifdef DEBUG
-				td->td_SkipCount++;
-				#endif
-				return 0;
-			}
-		}
+		#ifdef DEBUG
+		td->td_SkipCount++;
+		#endif
+		return 0;
 	}
-	else
+
+	if (age != 0 && age <= td->td_Age)
 	{
-		if (age != 0 && age <= td->td_Age)
-		{
-			#ifdef DEBUG
-			td->td_SkipCount++;
-			#endif
-			return 0;
-		}
+		#ifdef DEBUG
+		td->td_SkipCount++;
+		#endif
+		return 0;
 	}
 
 	#ifdef DEBUG
@@ -739,8 +738,19 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 	cellw = td->td_CellW;
 	cellh = td->td_CellH;
 
-	x = td->td_IBox.Left + posx * cellw;
-	y = td->td_IBox.Top  + posy * cellh;
+	#ifdef OFFSCREEN_BUFFER
+	if (td->td_TmpRP.BitMap != NULL && len)
+	{
+		rp = &td->td_TmpRP;
+		x = y = 0;
+	}
+	else
+	#endif
+	{
+		rp = td->td_RPort;
+		x = td->td_IBox.Left + posx * cellw;
+		y = td->td_IBox.Top + posy * cellh;
+	}
 
 	if (attr->inverse)
 	{
@@ -785,20 +795,49 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 		IGraphics->Text(rp, tmp, 1);
 	}
 
+	#ifdef OFFSCREEN_BUFFER
+	if (rp == &td->td_TmpRP)
+	{
+		IGraphics->BltBitMapTags(
+			BLITA_SrcType,  BLITT_BITMAP,
+			BLITA_Source,   td->td_TmpRP.BitMap,
+			BLITA_DestType, BLITT_RASTPORT,
+			BLITA_Dest,     td->td_RPort,
+			BLITA_DestX,    td->td_IBox.Left + posx * cellw,
+			BLITA_DestY,    td->td_IBox.Top + posy * cellh,
+			BLITA_Width,    cellw,
+			BLITA_Height,   cellh,
+			TAG_END);
+	}
+	#endif
+
 	return 0;
 }
 
-static void render_cells(struct TermData *td, struct RastPort *rp)
+static void render_cells(struct TermData *td, struct RastPort *rp, UWORD miny, UWORD maxy, BOOL domargins)
 {
 	td->td_RPort = rp;
 
-	IGraphics->SetDrMd(rp, JAM1);
-	IGraphics->SetFont(rp, td->td_Font);
+	#ifdef OFFSCREEN_BUFFER
+	if (td->td_TmpRP.BitMap != NULL)
+	{
+		IGraphics->SetDrMd(&td->td_TmpRP, JAM1);
+		IGraphics->SetFont(&td->td_TmpRP, td->td_Font);
+	}
+	else
+	#endif
+	{
+		IGraphics->SetDrMd(rp, JAM1);
+		IGraphics->SetFont(rp, td->td_Font);
+	}
 
 	#ifdef DEBUG
 	td->td_SkipCount = 0;
 	td->td_UpdateCount = 0;
 	#endif
+
+	td->td_MinY = miny;
+	td->td_MaxY = maxy;
 
 	td->td_Age = tsm_screen_draw(td->td_Con, &tsm_draw_cb, td);
 
@@ -809,7 +848,7 @@ static void render_cells(struct TermData *td, struct RastPort *rp)
 
 	td->td_RPort = NULL;
 
-	if (td->td_ScrollDelta == 0)
+	if (domargins)
 	{
 		/* Fill margins with the VTE default background color */
 		struct tsm_screen_attr attr;
@@ -848,15 +887,76 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 	struct TermData *td = INST_DATA(cl, obj);
 	struct RastPort *rp = gpr->gpr_RPort;
 
+	#ifdef OFFSCREEN_BUFFER
+	struct Screen *screen = gpr->gpr_GInfo->gi_Screen;
+	ULONG cellw = td->td_CellW;
+	ULONG cellh = td->td_CellH;
+	if (td->td_TmpRP.BitMap == NULL ||
+		td->td_TmpScreen != screen ||
+		td->td_TmpSize != ((cellw << 16) | cellh))
+	{
+		struct BitMap *bitmap;
+		struct Layer_Info *li;
+		struct Layer *layer;
+
+		if (td->td_TmpRP.BitMap != NULL)
+		{
+			ILayers->DeleteLayer(0, td->td_TmpRP.Layer);
+			ILayers->DisposeLayerInfo(td->td_TmpLayerInfo);
+			IGraphics->FreeBitMap(td->td_TmpRP.BitMap);
+
+			td->td_TmpLayerInfo = NULL;
+			td->td_TmpRP.BitMap = NULL;
+			td->td_TmpRP.Layer = NULL;
+		}
+
+		bitmap = IGraphics->AllocBitMapTags(cellw, cellh, 24,
+			BMATags_Friend,      screen->RastPort.BitMap,
+			BMATags_UserPrivate, TRUE,
+			TAG_END);
+		if (bitmap != NULL)
+		{
+			li = ILayers->NewLayerInfo();
+			if (li != NULL)
+			{
+				layer = ILayers->CreateUpfrontLayer(li, bitmap, 0, 0, cellw - 1, cellh - 1, 0, NULL);
+				if (layer != NULL)
+				{
+					td->td_TmpLayerInfo = li;
+
+					IGraphics->InitRastPort(&td->td_TmpRP);
+					td->td_TmpRP.BitMap = bitmap;
+					td->td_TmpRP.Layer = layer;
+
+					td->td_TmpScreen = screen;
+					td->td_TmpSize = (cellw << 16) | cellh;
+				}
+				else
+				{
+					ILayers->DisposeLayerInfo(li);
+					IGraphics->FreeBitMap(bitmap);
+				}
+			}
+			else
+			{
+				IGraphics->FreeBitMap(bitmap);
+			}
+		}
+	}
+	#endif
+
 	if (gpr->gpr_Redraw == GREDRAW_SCROLL)
 	{
 		struct Layer *layer = gpr->gpr_GInfo->gi_Layer;
 		struct Hook *bfh;
+		LONG scroll = td->td_ScrollDelta;
 		BOOL scroll_damage = FALSE;
+
+		td->td_ScrollDelta = 0;
 
 		bfh = ILayers->InstallLayerHook(layer, LAYERS_NOBACKFILL);
 
-		IGraphics->ScrollRasterBF(rp, 0, td->td_ScrollDelta * td->td_CellH,
+		IGraphics->ScrollRasterBF(rp, 0, scroll * td->td_CellH,
 		                          td->td_IBox.Left,
 		                          td->td_IBox.Top,
 		                          td->td_IBox.Left + td->td_Width - 1,
@@ -867,9 +967,10 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 
 		ILayers->InstallLayerHook(layer, bfh);
 
-		render_cells(td, rp);
-
-		td->td_ScrollDelta = 0;
+		if (scroll < 0)
+			render_cells(td, rp, 0, 1 - scroll, FALSE);
+		else
+			render_cells(td, rp, td->td_Rows - scroll, td->td_Rows - 1, FALSE);
 
 		if (scroll_damage)
 		{
@@ -877,7 +978,10 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 
 			ILayers->BeginUpdate(layer);
 
-			render_cells(td, rp);
+			if (scroll < 0)
+				render_cells(td, rp, -scroll, td->td_Rows - 1, TRUE);
+			else
+				render_cells(td, rp, 0, td->td_Rows - scroll - 1, TRUE);
 
 			ILayers->EndUpdate(layer, FALSE);
 		}
@@ -895,7 +999,7 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 			td->td_Age = 0;
 		}
 
-		render_cells(td, rp);
+		render_cells(td, rp, 0, td->td_Rows - 1, TRUE);
 	}
 
 	return 1;

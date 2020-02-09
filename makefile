@@ -10,7 +10,10 @@ OPTIMIZE = -O2
 DEBUG    = -g
 INCLUDES = -I. -I./$(LIBSSH2DIR)/include -I./libtsm/tsm -I./libtsm/shared
 WARNINGS = -Wall -Wwrite-strings -Werror
-DEFINES  = -D__NOLIBBASE__ #-DDEBUG
+DEFINES  = -D__NOLIBBASE__ -DOFFSCREEN_BUFFER
+
+# Uncomment to enable debug output
+#DEFINES += -DDEBUG
 
 CFLAGS  = $(OPTIMIZE) $(DEBUG) $(INCLUDES) $(WARNINGS) $(DEFINES)
 LDFLAGS = -static
