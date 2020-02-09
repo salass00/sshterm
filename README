@@ -31,6 +31,10 @@ KEYFILE can be used to change the key file used for public key authentication
 MAXSB is the maximum number of lines stored in the scrollback buffer (set to
 zero to disable this feature). The default value is 2000 lines.
 
+To connect to SSH server example.org using port 123 and user name "testuser":
+
+SSHTerm example.org PORT 123 testuser
+
 Known issues:
 
 - If the backspace key is not working correctly in the sudo password prompt it
