@@ -3,7 +3,7 @@ SSHTerm 1.1 (29.1.2020)
 - First released version.
 
 
-SSHTerm 1.2 (d.m.2020)
+SSHTerm 1.2 (9.2.2020)
 
 - Specifying the KEYFILE argument now implies that public key authentication
   should be used instead of any other method (same as in ssh2-handler).
