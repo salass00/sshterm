@@ -910,10 +910,18 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 			td->td_TmpRP.Layer = NULL;
 		}
 
-		bitmap = IGraphics->AllocBitMapTags(cellw, cellh, 24,
-			BMATags_Friend,      screen->RastPort.BitMap,
-			BMATags_UserPrivate, TRUE,
-			TAG_END);
+		const struct TagItem bmtags[] =
+		{
+			{ BMATags_Friend,      (ULONG)screen->RastPort.BitMap },
+			{ BMATags_UserPrivate, TRUE                           },
+			{ TAG_END,             0                              }
+		};
+
+		if (LIB_IS_AT_LEAST(IGraphics->Data.LibBase, 53, 7))
+			bitmap = IGraphics->AllocBitMapTagList(cellw, cellh, 24, bmtags);
+		else
+			bitmap = IGraphics->AllocBitMap(cellw, cellh, 24, BMF_CHECKVALUE, (struct BitMap *)bmtags);
+
 		if (bitmap != NULL)
 		{
 			li = ILayers->NewLayerInfo();
