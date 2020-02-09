@@ -471,7 +471,7 @@ int sshterm(int argc, char **argv)
 
 		if (FD_ISSET(sock, &rfds))
 		{
-			char buffer[256];
+			char buffer[1024];
 			ssize_t n;
 
 			do {
@@ -505,7 +505,7 @@ int sshterm(int argc, char **argv)
 
 			if (termwin_poll(termwin))
 			{
-				char buffer[256], *p;
+				char buffer[1024], *p;
 				ssize_t size, n;
 
 				do {

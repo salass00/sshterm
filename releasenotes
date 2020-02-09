@@ -11,3 +11,5 @@ SSHTerm 1.2 (d.m.2020)
 - Now uses an offscreen buffer for text rendering which should speed up anti-
   aliased text rendering on most platforms.
 
+- Increased read and write buffers in main loop from 256 to 1024 bytes.
+
