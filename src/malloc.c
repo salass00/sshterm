@@ -26,6 +26,12 @@
 
 static APTR mempool;
 
+struct memchunk
+{
+	ULONG size;
+	APTR ptr;
+};
+
 static void __attribute__((constructor)) malloc_init(void)
 {
 	mempool = IExec->AllocSysObjectTags(ASOT_MEMPOOL,
@@ -48,40 +54,65 @@ static void __attribute__((destructor)) malloc_cleanup(void)
 
 void *malloc(size_t size)
 {
-	void *ptr = IExec->AllocPooled(mempool, size + 8);
-	if (ptr == NULL)
-		return NULL;
+	struct memchunk *mc;
+	void *ptr = NULL;
 
-	*(size_t *)ptr = size;
+	size = (size + 7) & ~7;
 
-	return (char *)ptr + 8;
+	mc = IExec->AllocPooled(mempool, sizeof(*mc) + size);
+	if (mc != NULL)
+	{
+		ptr = mc + 1;
+
+		mc->size = size;
+		mc->ptr = ptr;
+	}
+
+	return ptr;
 }
 
 void *calloc(size_t num, size_t size)
 {
-	size *= num;
+	void *ptr;
 
-	void *ptr = malloc(size);
+	size *= num;
+	size = (size + 7) & ~7;
+
+	ptr = malloc(size);
 	if (ptr != NULL)
+	{
 		memset(ptr, 0, size);
+	}
 
 	return ptr;
 }
 
 void *realloc(void *ptr, size_t size)
 {
-	if (ptr == NULL)
-		return malloc(size);
+	void *new;
 
-	size_t osize = *(size_t *)((char *)ptr - 8);
-	if (osize >= size)
-		return ptr;
-
-	void *new = malloc(size);
-	if (new != NULL)
+	if (ptr != NULL)
 	{
-		memcpy(new, ptr, osize);
-		free(ptr);
+		struct memchunk *mc;
+
+		mc = (struct memchunk *)ptr - 1;
+
+		if (mc->ptr != ptr)
+			IExec->Alert(AN_MemCorrupt);
+
+		if (mc->size >= size)
+			return ptr;
+
+		new = malloc(size);
+		if (new != NULL)
+		{
+			memcpy(new, ptr, mc->size);
+			free(ptr);
+		}
+	}
+	else
+	{
+		new = malloc(size);
 	}
 
 	return new;
@@ -91,20 +122,25 @@ void free(void *ptr)
 {
 	if (ptr != NULL)
 	{
-		ptr = (char *)ptr - 8;
+		struct memchunk *mc;
 
-		IExec->FreePooled(mempool, ptr, *(size_t *)ptr);
+		mc = (struct memchunk *)ptr - 1;
+
+		if (mc->ptr != ptr)
+			IExec->Alert(AN_MemCorrupt);
+
+		IExec->FreePooled(mempool, mc, sizeof(*mc) + mc->size);
 	}
 }
 
 char *strdup(const char *src)
 {
-	char *result;
+	char *dst;
 
-	result = malloc(strlen(src) + 1);
-	if (result != NULL)
-		strcpy(result, src);
+	dst = malloc(strlen(src) + 1);
+	if (dst != NULL)
+		strcpy(dst, src);
 
-	return result;
+	return dst;
 }
 

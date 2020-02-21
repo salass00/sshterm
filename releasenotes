@@ -19,3 +19,6 @@ SSHTerm 1.3 (d.m.2020)
 - Now uses AllocBitMap() for allocating the offscreen buffer if
   graphics.library is version 53.6 or older.
 
+- Rewrote the custom malloc memory allocator and fixed a bug in free(), which
+  was calling FreePooled() with a too small memory size.
+
