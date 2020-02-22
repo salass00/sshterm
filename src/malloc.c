@@ -26,8 +26,7 @@
 
 static APTR mempool;
 
-struct memchunk
-{
+struct memchunk {
 	ULONG size;
 	APTR ptr;
 };

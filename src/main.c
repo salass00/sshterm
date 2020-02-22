@@ -124,17 +124,47 @@ static char *request_password(unsigned int auth_pw, ...)
 	return password;
 }
 
+struct ssh_session {
+	int              socket;
+	LIBSSH2_SESSION *session;
+	LIBSSH2_CHANNEL *channel;
+	char            *password;
+    LIBSSH2_AGENT   *agent;
+	const char      *keyfile;
+	char             iobuf[4096];
+};
+
 static void kbd_callback(const char *name, int name_len, const char *instruction,
 	int instruction_len, int num_prompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts,
 	LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses, void **abstract)
 {
-	const char *password = *abstract;
+	struct ssh_session *ss = IExec->FindTask(NULL)->tc_UserData;
 
 	if (num_prompts == 1)
 	{
-		responses[0].text   = strdup(password);
-		responses[0].length = strlen(password);
+		responses[0].text   = strdup(ss->password);
+		responses[0].length = strlen(ss->password);
 	}
+}
+
+static int passphrase_callback(char *buf, int size, int rwflag, void *userdata)
+{
+	struct ssh_session *ss = IExec->FindTask(NULL)->tc_UserData;
+
+	if (ss->password == NULL)
+	{
+		ss->password = request_password(AUTH_PUBLICKEY, ss->keyfile);
+		if (ss->password == NULL)
+		{
+			if (size)
+				*buf = '\0';
+			return 0;
+		}
+	}
+
+	strlcpy(buf, ss->password, size);
+
+	return strlen(buf);
 }
 
 int sshterm(int argc, char **argv)
@@ -143,22 +173,18 @@ int sshterm(int argc, char **argv)
 	struct RDArgs *rda = NULL;
 	const char *hostname;
 	const char *username;
-	const char *password;
 	LONG sb_size = 2000;
 	struct Screen *screen = NULL;
 	struct TermWindow *termwin = NULL;
-	int sock = -1;
+	struct ssh_session *ss = NULL;
 	const struct hostent *hostent;
 	struct in_addr hostaddr;
 	int port;
 	struct sockaddr_in sin;
-	LIBSSH2_SESSION *session = NULL;
 	int rc;
 	char homedir[1024];
 	const char *userauthlist;
 	unsigned int auth_pw;
-	LIBSSH2_AGENT *agent = NULL;
-	LIBSSH2_CHANNEL *channel = NULL;
 	UWORD columns, rows;
 	BOOL done;
 	ULONG signals;
@@ -176,7 +202,6 @@ int sshterm(int argc, char **argv)
 
 	hostname = (const char *)args[ARG_HOSTADDR];
 	username = (const char *)args[ARG_USER];
-	password = (const char *)args[ARG_PASSWORD];
 
 	screen = IIntuition->LockPubScreen(NULL);
 	if (screen == NULL)
@@ -201,8 +226,22 @@ int sshterm(int argc, char **argv)
 		goto out;
 	}
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == -1)
+	ss = malloc(sizeof(*ss));
+	if (ss == NULL)
+	{
+		goto out;
+	}
+
+	memset(ss, 0, sizeof(*ss));
+	ss->socket = -1;
+
+	if (args[ARG_PASSWORD])
+	{
+		ss->password = strdup((const char *)args[ARG_PASSWORD]);
+	}
+
+	ss->socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (ss->socket == -1)
 	{
 		fprintf(stderr, "Failed to create socket\n");
 		goto out;
@@ -230,20 +269,22 @@ int sshterm(int argc, char **argv)
 	sin.sin_port   = htons(port);
 	sin.sin_addr   = hostaddr;
 
-	if (connect(sock, (struct sockaddr *)&sin, sizeof(sin)) != 0)
+	if (connect(ss->socket, (struct sockaddr *)&sin, sizeof(sin)) != 0)
 	{
 		fprintf(stderr, "Failed to connect - %s (%d)\n", hstrerror(h_errno), h_errno);
 		goto out;
 	}
 
-	session = libssh2_session_init_ex(NULL, NULL, NULL, (void *)password);
-	if (session == NULL)
+	IExec->FindTask(NULL)->tc_UserData = ss;
+
+	ss->session = libssh2_session_init();
+	if (ss->session == NULL)
 	{
 		fprintf(stderr, "Failed to create SSH session\n");
 		goto out;
 	}
 
-	rc = libssh2_session_handshake(session, sock);
+	rc = libssh2_session_handshake(ss->session, ss->socket);
 	if (rc < 0)
 	{
 		fprintf(stderr, "Failed to establish SSH session - %d\n", rc);
@@ -257,7 +298,7 @@ int sshterm(int argc, char **argv)
 
 	auth_pw = 0;
 
-	userauthlist = libssh2_userauth_list(session, username, strlen(username));
+	userauthlist = libssh2_userauth_list(ss->session, username, strlen(username));
 	if (strstr(userauthlist, "password") != NULL)
 	{
 		auth_pw |= AUTH_PASSWORD;
@@ -290,25 +331,35 @@ int sshterm(int argc, char **argv)
 
 	if (auth_pw & AUTH_PASSWORD)
 	{
-		if (password == NULL)
+		if (ss->password == NULL)
 		{
-			password = request_password(AUTH_PASSWORD, username, hostname);
-			if (password == NULL)
+			ss->password = request_password(AUTH_PASSWORD, username, hostname);
+			if (ss->password == NULL)
 				goto out;
 		}
 
-		rc = libssh2_userauth_password(session, username, password);
+		rc = libssh2_userauth_password(ss->session, username, ss->password);
+		if (rc < 0)
+		{
+			fprintf(stderr, "Authentication by password failed\n");
+			goto out;
+		}
 	}
 	else if (auth_pw & AUTH_KEYBOARD_INTERACTIVE)
 	{
-		if (password == NULL)
+		if (ss->password == NULL)
 		{
-			password = request_password(AUTH_KEYBOARD_INTERACTIVE, username, hostname);
-			if (password == NULL)
+			ss->password = request_password(AUTH_KEYBOARD_INTERACTIVE, username, hostname);
+			if (ss->password == NULL)
 				goto out;
 		}
 
-		rc = libssh2_userauth_keyboard_interactive(session, username, &kbd_callback);
+		rc = libssh2_userauth_keyboard_interactive(ss->session, username, &kbd_callback);
+		if (rc < 0)
+		{
+			fprintf(stderr, "Authentication by keyboard-interactive failed\n");
+			goto out;
+		}
 	}
 	else
 	{
@@ -316,14 +367,14 @@ int sshterm(int argc, char **argv)
 
 		if (!args[ARG_NOSSHAGENT])
 		{
-			agent = libssh2_agent_init(session);
-			if (agent == NULL)
+			ss->agent = libssh2_agent_init(ss->session);
+			if (ss->agent == NULL)
 			{
 				fprintf(stderr, "Failed to init ssh-agent support\n");
 			}
 			else
 			{
-				rc = libssh2_agent_connect(agent);
+				rc = libssh2_agent_connect(ss->agent);
 				if (rc < 0)
 				{
 					fprintf(stderr, "Failed to connect to ssh-agent\n");
@@ -333,14 +384,14 @@ int sshterm(int argc, char **argv)
 					struct libssh2_agent_publickey *identity;
 					struct libssh2_agent_publickey *prev_identity = NULL;
 
-					if (libssh2_agent_list_identities(agent))
+					if (libssh2_agent_list_identities(ss->agent))
 					{
 						fprintf(stderr, "Failure requesting identities from ssh-agent\n");
 						goto out;
 					}
 					while (TRUE)
 					{
-						rc = libssh2_agent_get_identity(agent, &identity, prev_identity);
+						rc = libssh2_agent_get_identity(ss->agent, &identity, prev_identity);
 						if (rc == 1)
 							break;
 						if (rc < 0)
@@ -349,7 +400,7 @@ int sshterm(int argc, char **argv)
 							goto out;
 						}
 
-						if (libssh2_agent_userauth(agent, username, identity))
+						if (libssh2_agent_userauth(ss->agent, username, identity))
 						{
 							fprintf(stderr, "Authentication with username %s and public key %s failed\n",
 								username, identity->comment);
@@ -373,11 +424,11 @@ int sshterm(int argc, char **argv)
 			char keyfile1[1024];
 			char keyfile2[1024];
 
-			if (agent != NULL)
+			if (ss->agent != NULL)
 			{
-				libssh2_agent_disconnect(agent);
-				libssh2_agent_free(agent);
-				agent = NULL;
+				libssh2_agent_disconnect(ss->agent);
+				libssh2_agent_free(ss->agent);
+				ss->agent = NULL;
 			}
 
 			if (args[ARG_KEYFILE])
@@ -395,24 +446,20 @@ int sshterm(int argc, char **argv)
 				IDOS->AddPart(keyfile2, ".ssh/id_rsa", sizeof(keyfile2));
 			}
 
-			if (password == NULL)
-			{
-				password = request_password(AUTH_PUBLICKEY, keyfile2);
-				if (password == NULL)
-					goto out;
-			}
+			ss->keyfile = keyfile2;
+			libssh2_passphrase_callback_set(ss->session, &passphrase_callback);
 
-			rc = libssh2_userauth_publickey_fromfile(session, username, keyfile1, keyfile2, password);
+			rc = libssh2_userauth_publickey_fromfile(ss->session, username, keyfile1, keyfile2, NULL/*ss->password*/);
+			if (rc < 0)
+			{
+				fprintf(stderr, "Authentication by public key failed\n");
+				goto out;
+			}
 		}
 	}
-	if (rc < 0)
-	{
-		fprintf(stderr, "Authentication failed\n");
-		goto out;
-	}
 
-	channel = libssh2_channel_open_session(session);
-	if (channel == NULL)
+	ss->channel = libssh2_channel_open_session(ss->session);
+	if (ss->channel == NULL)
 	{
 		fprintf(stderr, "Unable to open a session\n");
 		goto out;
@@ -420,19 +467,19 @@ int sshterm(int argc, char **argv)
 
 	termwin_get_size(termwin, &columns, &rows);
 
-	if (libssh2_channel_request_pty_ex(channel, "xterm-256color", 14, NULL, 0, columns, rows, 0, 0))
+	if (libssh2_channel_request_pty_ex(ss->channel, "xterm-256color", 14, NULL, 0, columns, rows, 0, 0))
 	{
 		fprintf(stderr, "Failed requesting pty\n");
 		goto out;
 	}
 
-	if (libssh2_channel_shell(channel))
+	if (libssh2_channel_shell(ss->channel))
 	{
 		fprintf(stderr, "Unable to request shell on allocated pty\n");
 		goto out;
 	}
 
-	libssh2_session_set_blocking(session, 0);
+	libssh2_session_set_blocking(ss->session, 0);
 
 	done = FALSE;
 
@@ -441,19 +488,19 @@ int sshterm(int argc, char **argv)
 		FD_ZERO(&rfds);
 		FD_ZERO(&wfds);
 
-		FD_SET(sock, &rfds);
+		FD_SET(ss->socket, &rfds);
 
 		if (termwin_poll_new_size(termwin) || termwin_poll(termwin))
 		{
-			FD_SET(sock, &wfds);
+			FD_SET(ss->socket, &wfds);
 		}
 
 		signals = termwin_get_signals(termwin);
 
 		#ifdef __CLIB2__
-		rc = waitselect(sock + 1, &rfds, &wfds, NULL, NULL, &signals);
+		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, &signals);
 		#else
-		rc = waitselect(sock + 1, &rfds, &wfds, NULL, NULL, (unsigned int *)&signals);
+		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, (unsigned int *)&signals);
 		#endif
 		if (rc < 0)
 		{
@@ -469,17 +516,16 @@ int sshterm(int argc, char **argv)
 		if (termwin_handle_input(termwin))
 			done = TRUE;
 
-		if (FD_ISSET(sock, &rfds))
+		if (FD_ISSET(ss->socket, &rfds))
 		{
-			char buffer[1024];
 			ssize_t n;
 
 			do {
-				n = libssh2_channel_read(channel, buffer, sizeof(buffer));
+				n = libssh2_channel_read(ss->channel, ss->iobuf, sizeof(ss->iobuf));
 
 				if (n > 0)
 				{
-					termwin_write(termwin, buffer, n);
+					termwin_write(termwin, ss->iobuf, n);
 				}
 				else if (n < 0 && n != LIBSSH2_ERROR_EAGAIN)
 				{
@@ -489,13 +535,13 @@ int sshterm(int argc, char **argv)
 			} while (n > 0);
 		}
 
-		if (FD_ISSET(sock, &wfds))
+		if (FD_ISSET(ss->socket, &wfds))
 		{
 			if (termwin_poll_new_size(termwin))
 			{
 				termwin_get_size(termwin, &columns, &rows);
 
-				rc = libssh2_channel_request_pty_size(channel, columns, rows);
+				rc = libssh2_channel_request_pty_size(ss->channel, columns, rows);
 				if (rc < 0)
 				{
 					IExec->DebugPrintF("libssh2_channel_request_pty_size: %d\n", rc);
@@ -505,16 +551,16 @@ int sshterm(int argc, char **argv)
 
 			if (termwin_poll(termwin))
 			{
-				char buffer[1024], *p;
+				char *p;
 				ssize_t size, n;
 
 				do {
-					size = termwin_read(termwin, buffer, sizeof(buffer));
+					size = termwin_read(termwin, ss->iobuf, sizeof(ss->iobuf));
 
-					p = buffer;
+					p = ss->iobuf;
 					while (size > 0)
 					{
-						n = libssh2_channel_write(channel, p, size);
+						n = libssh2_channel_write(ss->channel, p, size);
 						if (n > 0)
 						{
 							p += n;
@@ -530,7 +576,7 @@ int sshterm(int argc, char **argv)
 			}
 		}
 
-		if (libssh2_channel_eof(channel))
+		if (libssh2_channel_eof(ss->channel))
 		{
 			done = TRUE;
 		}
@@ -542,32 +588,38 @@ int sshterm(int argc, char **argv)
 	retval = RETURN_OK;
 
 out:
-	if (channel != NULL)
+	if (ss != NULL)
 	{
-		libssh2_channel_close(channel);
-		libssh2_channel_wait_closed(channel);
-		libssh2_channel_free(channel);
-		channel = NULL;
-	}
+		if (ss->channel != NULL)
+		{
+			libssh2_channel_close(ss->channel);
+			libssh2_channel_wait_closed(ss->channel);
+			libssh2_channel_free(ss->channel);
+			ss->channel = NULL;
+		}
 
-	if (agent != NULL)
-	{
-		libssh2_agent_disconnect(agent);
-		libssh2_agent_free(agent);
-		agent = NULL;
-	}
+		if (ss->agent != NULL)
+		{
+			libssh2_agent_disconnect(ss->agent);
+			libssh2_agent_free(ss->agent);
+			ss->agent = NULL;
+		}
 
-	if (session != NULL)
-	{
-		libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing");
-		libssh2_session_free(session);
-		session = NULL;
-	}
+		if (ss->session != NULL)
+		{
+			libssh2_session_disconnect(ss->session, "Normal Shutdown, Thank you for playing");
+			libssh2_session_free(ss->session);
+			ss->session = NULL;
+		}
 
-	if (sock != -1)
-	{
-		close(sock);
-		sock = -1;
+		if (ss->socket != -1)
+		{
+			close(ss->socket);
+			ss->socket = -1;
+		}
+
+		free(ss);
+		ss = NULL;
 	}
 
 	if (termwin != NULL)
