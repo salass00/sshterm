@@ -49,6 +49,7 @@ obj/termwin.o: src/sshterm.h src/term-gc.h $(TARGET)_rev.h
 obj/about.o: src/sshterm.h $(TARGET)_rev.h
 obj/signal_pid.o: src/sshterm.h
 obj/term-gc.o: src/sshterm.h src/term-gc.h libtsm/tsm/libtsm.h
+obj/malloc.o: CFLAGS += -fno-builtin
 
 $(TARGET): $(OBJS) libtsm/libtsm.a $(LIBSSH2DIR)/libssh2.a
 	$(CC) $(LDFLAGS) -o $@.debug $^ $(LIBS)
