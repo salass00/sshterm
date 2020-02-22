@@ -32,7 +32,7 @@ SSHTerm 1.3 (22.2.2020)
   stack allocated.
 
 
-SSHTerm 1.4 (d.m.2020)
+SSHTerm 1.4 (22.2.2020)
 
 - Added -fno-builtin when compiling src/malloc.c to stop gcc from generating
   a call to calloc() inside of the calloc() function leading to infinite
