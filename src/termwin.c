@@ -57,7 +57,12 @@ enum {
 	MID_PROJECT_CLOSE,
 	MID_EDIT_MENU,
 	MID_EDIT_COPY,
-	MID_EDIT_PASTE
+	MID_EDIT_PASTE,
+	MID_PALETTE_MENU,
+	MID_PALETTE_DEFAULT,
+	MID_PALETTE_SOLARIZED,
+	MID_PALETTE_SOLARIZED_BLACK,
+	MID_PALETTE_SOLARIZED_WHITE
 };
 
 static inline ULONG GET(Object *obj, ULONG attr)
@@ -125,6 +130,11 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 		NM_Menu, "Edit", MA_ID, MID_EDIT_MENU,
 		NM_Item, "Copy", MA_ID, MID_EDIT_COPY, MA_Key, "C",
 		NM_Item, "Paste", MA_ID, MID_EDIT_PASTE, MA_Key, "V",
+		NM_Menu, "Palette", MA_ID, MID_PALETTE_MENU,
+		NM_Item, "Default", MA_ID, MID_PALETTE_DEFAULT, MA_MX, ~1, MA_Selected, TRUE,
+		NM_Item, "Solarized", MA_ID, MID_PALETTE_SOLARIZED, MA_MX, ~2,
+		NM_Item, "Solarized Black", MA_ID, MID_PALETTE_SOLARIZED_BLACK, MA_MX, ~4,
+		NM_Item, "Solarized White", MA_ID, MID_PALETTE_SOLARIZED_WHITE, MA_MX, ~8,
 		TAG_END);
 	if (tw->MenuStrip == NULL)
 	{
@@ -153,7 +163,7 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 		TAG_END);
 
 	tw->Layout = IIntuition->NewObject(LayoutClass, NULL,
-		/* LAYOUT_DeferLayout, TRUE, */
+		LAYOUT_DeferLayout, TRUE,
 		LAYOUT_SpaceOuter,  FALSE,
 		LAYOUT_AddChild,    tw->Term,
 		TAG_END);
@@ -252,6 +262,17 @@ void termwin_set_max_sb(struct TermWindow *tw, ULONG max_sb)
 		TAG_END);
 }
 
+void termwin_set_palette(struct TermWindow *tw, const char *palette)
+{
+	struct Window *window;
+
+	window = (struct Window *)GET(tw->Window, WINDOW_Window);
+
+	IIntuition->SetGadgetAttrs((struct Gadget *)tw->Term, window, NULL,
+		TERM_Palette, palette,
+		TAG_END);
+}
+
 void termwin_write(struct TermWindow *tw, const char *buffer, size_t len)
 {
 	struct tpInput tpi;
@@ -338,6 +359,14 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 	struct tpGeneric tpg;
 	BOOL done = FALSE;
 
+	static const char *const palette_name[] =
+	{
+		NULL,
+		"solarized",
+		"solarized-black",
+		"solarized-white"
+	};
+
 	while ((result = IIntuition->IDoMethod(tw->Window, WM_HANDLEINPUT, &code)) != WMHI_LASTMSG)
 	{
 		switch (result & WMHI_CLASSMASK)
@@ -384,6 +413,13 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 							tpg.tpg_GInfo = NULL;
 
 							DGM(tw->Term, tw->Window, (Msg)&tpg);
+							break;
+
+						case MID_PALETTE_DEFAULT:
+						case MID_PALETTE_SOLARIZED:
+						case MID_PALETTE_SOLARIZED_BLACK:
+						case MID_PALETTE_SOLARIZED_WHITE:
+							termwin_set_palette(tw, palette_name[mid - MID_PALETTE_DEFAULT]);
 							break;
 					}
 				}
