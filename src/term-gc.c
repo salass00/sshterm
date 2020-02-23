@@ -101,6 +101,7 @@ struct TermData
 
 	#ifdef OFFSCREEN_BUFFER
 	struct Layer_Info *td_TmpLayerInfo;
+	struct Layer      *td_TmpLayer;
 	struct RastPort    td_TmpRP;
 	struct Screen     *td_TmpScreen;
 	ULONG              td_TmpSize;
@@ -327,13 +328,13 @@ static ULONG TERM_dispose(Class *cl, Object *obj, Msg msg)
 	#ifdef OFFSCREEN_BUFFER
 	if (td->td_TmpRP.BitMap != NULL)
 	{
-		ILayers->DeleteLayer(0, td->td_TmpRP.Layer);
+		ILayers->DeleteLayer(0, td->td_TmpLayer);
 		ILayers->DisposeLayerInfo(td->td_TmpLayerInfo);
 		IGraphics->FreeBitMap(td->td_TmpRP.BitMap);
 
+		td->td_TmpLayer = NULL;
 		td->td_TmpLayerInfo = NULL;
 		td->td_TmpRP.BitMap = NULL;
-		td->td_TmpRP.Layer = NULL;
 	}
 	#endif
 
@@ -531,7 +532,6 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 				tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data);
 				/* Force a complete refresh */
 				refresh = TRUE;
-				td->td_Age = 0;
 				break;
 		}
 	}
@@ -715,7 +715,7 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 	ULONG style;
 	TEXT tmp[1];
 
-	if (posy < td->td_MinY || posy > td->td_MaxY)
+	if (age != 0 && age <= td->td_Age)
 	{
 		#ifdef DEBUG
 		td->td_SkipCount++;
@@ -723,7 +723,7 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 		return 0;
 	}
 
-	if (age != 0 && age <= td->td_Age)
+	if (posy < td->td_MinY || posy > td->td_MaxY)
 	{
 		#ifdef DEBUG
 		td->td_SkipCount++;
@@ -739,7 +739,7 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 	cellh = td->td_CellH;
 
 	#ifdef OFFSCREEN_BUFFER
-	if (td->td_TmpRP.BitMap != NULL && len)
+	if (len && td->td_TmpRP.BitMap != NULL)
 	{
 		rp = &td->td_TmpRP;
 		x = y = 0;
@@ -792,7 +792,24 @@ static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 		IGraphics->Move(rp, x, y + td->td_Baseline);
 
 		tmp[0] = map_unicode(td->td_MapTable, ch[0]);
+
+		#ifdef OFFSCREEN_BUFFER
+		if (rp == &td->td_TmpRP)
+		{
+			/* Enable clipping */
+			rp->Layer = td->td_TmpLayer;
+		}
+		#endif
+
 		IGraphics->Text(rp, tmp, 1);
+
+		#ifdef OFFSCREEN_BUFFER
+		if (rp == &td->td_TmpRP)
+		{
+			/* Disable clipping */
+			rp->Layer = NULL;
+		}
+		#endif
 	}
 
 	#ifdef OFFSCREEN_BUFFER
@@ -901,13 +918,13 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 
 		if (td->td_TmpRP.BitMap != NULL)
 		{
-			ILayers->DeleteLayer(0, td->td_TmpRP.Layer);
+			ILayers->DeleteLayer(0, td->td_TmpLayer);
 			ILayers->DisposeLayerInfo(td->td_TmpLayerInfo);
 			IGraphics->FreeBitMap(td->td_TmpRP.BitMap);
 
+			td->td_TmpLayer = NULL;
 			td->td_TmpLayerInfo = NULL;
 			td->td_TmpRP.BitMap = NULL;
-			td->td_TmpRP.Layer = NULL;
 		}
 
 		const struct TagItem bmtags[] =
@@ -927,14 +944,15 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 			li = ILayers->NewLayerInfo();
 			if (li != NULL)
 			{
-				layer = ILayers->CreateUpfrontLayer(li, bitmap, 0, 0, cellw - 1, cellh - 1, 0, NULL);
+				layer = ILayers->CreateUpfrontHookLayer(li, bitmap, 0, 0, cellw - 1, cellh - 1,
+				                                        0, LAYERS_NOBACKFILL, NULL);
 				if (layer != NULL)
 				{
 					td->td_TmpLayerInfo = li;
+					td->td_TmpLayer = layer;
 
 					IGraphics->InitRastPort(&td->td_TmpRP);
 					td->td_TmpRP.BitMap = bitmap;
-					td->td_TmpRP.Layer = layer;
 
 					td->td_TmpScreen = screen;
 					td->td_TmpSize = (cellw << 16) | cellh;
