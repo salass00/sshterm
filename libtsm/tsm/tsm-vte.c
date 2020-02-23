@@ -435,6 +435,46 @@ void tsm_vte_unref(struct tsm_vte *vte)
 	free(vte);
 }
 
+static void new_palette(struct tsm_vte *vte, struct tsm_screen *con)
+{
+	struct line *line;
+	unsigned int i, j;
+
+	/* force refresh of entire screen */
+	screen_inc_age(con);
+	con->age = con->age_cnt;
+
+	/* Update scrollback lines */
+	line = con->sb_first;
+	while (line)
+	{
+		for (j = 0; j < con->size_x && j < line->size; ++j)
+		{
+			to_rgb(vte, &line->cells[j].attr);
+		}
+
+		line = line->next;
+	}
+
+	/* Update main and alt lines */
+	for (i = 0; i < con->size_y; ++i)
+	{
+		line = con->main_lines[i];
+
+		for (j = 0; j < con->size_x && j < line->size; ++j)
+		{
+			to_rgb(vte, &line->cells[j].attr);
+		}
+
+		line = con->alt_lines[i];
+
+		for (j = 0; j < con->size_x && j < line->size; ++j)
+		{
+			to_rgb(vte, &line->cells[j].attr);
+		}
+	}
+}
+
 SHL_EXPORT
 int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette)
 {
@@ -460,7 +500,7 @@ int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette)
 	memcpy(&vte->cattr, &vte->def_attr, sizeof(vte->cattr));
 
 	tsm_screen_set_def_attr(vte->con, &vte->def_attr);
-	tsm_screen_erase_screen(vte->con, false);
+	new_palette(vte, vte->con);
 
 	return 0;
 }
