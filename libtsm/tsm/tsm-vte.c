@@ -152,42 +152,6 @@ struct vte_saved_state {
 	bool origin_mode;
 };
 
-struct tsm_vte {
-	unsigned long ref;
-	tsm_log_t llog;
-	void *llog_data;
-	struct tsm_screen *con;
-	tsm_vte_write_cb write_cb;
-	void *data;
-	char *palette_name;
-
-	struct tsm_utf8_mach *mach;
-	unsigned long parse_cnt;
-
-	unsigned int state;
-	unsigned int csi_argc;
-	int csi_argv[CSI_ARG_MAX];
-	unsigned int csi_flags;
-
-	const uint8_t (*palette)[3];
-	struct tsm_screen_attr def_attr;
-	struct tsm_screen_attr cattr;
-	unsigned int flags;
-
-	tsm_vte_charset **gl;
-	tsm_vte_charset **gr;
-	tsm_vte_charset **glt;
-	tsm_vte_charset **grt;
-	tsm_vte_charset *g0;
-	tsm_vte_charset *g1;
-	tsm_vte_charset *g2;
-	tsm_vte_charset *g3;
-
-	struct vte_saved_state saved_state;
-	unsigned int alt_cursor_x;
-	unsigned int alt_cursor_y;
-};
-
 enum vte_color {
 	COLOR_BLACK,
 	COLOR_RED,
@@ -208,6 +172,41 @@ enum vte_color {
 	COLOR_FOREGROUND,
 	COLOR_BACKGROUND,
 	COLOR_NUM
+};
+
+struct tsm_vte {
+	unsigned long ref;
+	tsm_log_t llog;
+	void *llog_data;
+	struct tsm_screen *con;
+	tsm_vte_write_cb write_cb;
+	void *data;
+
+	struct tsm_utf8_mach *mach;
+	unsigned long parse_cnt;
+
+	unsigned int state;
+	unsigned int csi_argc;
+	int csi_argv[CSI_ARG_MAX];
+	unsigned int csi_flags;
+
+	uint8_t palette[COLOR_NUM][3];
+	struct tsm_screen_attr def_attr;
+	struct tsm_screen_attr cattr;
+	unsigned int flags;
+
+	tsm_vte_charset **gl;
+	tsm_vte_charset **gr;
+	tsm_vte_charset **glt;
+	tsm_vte_charset **grt;
+	tsm_vte_charset *g0;
+	tsm_vte_charset *g1;
+	tsm_vte_charset *g2;
+	tsm_vte_charset *g3;
+
+	struct vte_saved_state saved_state;
+	unsigned int alt_cursor_x;
+	unsigned int alt_cursor_y;
 };
 
 static const uint8_t color_palette[COLOR_NUM][3] = {
@@ -298,16 +297,16 @@ static const uint8_t color_palette_solarized_white[COLOR_NUM][3] = {
 	[COLOR_BACKGROUND]    = { 238, 232, 213 }, /* light grey */
 };
 
-static const uint8_t (*get_palette(struct tsm_vte *vte))[3]
+static const uint8_t (*get_palette(const char *palette))[3]
 {
-	if (!vte->palette_name)
+	if (!palette)
 		return color_palette;
 
-	if (!strcmp(vte->palette_name, "solarized"))
+	if (!strcmp(palette, "solarized"))
 		return color_palette_solarized;
-	if (!strcmp(vte->palette_name, "solarized-black"))
+	if (!strcmp(palette, "solarized-black"))
 		return color_palette_solarized_black;
-	if (!strcmp(vte->palette_name, "solarized-white"))
+	if (!strcmp(palette, "solarized-white"))
 		return color_palette_solarized_white;
 
 	return color_palette;
@@ -389,7 +388,7 @@ int tsm_vte_new(struct tsm_vte **out, struct tsm_screen *con,
 	vte->con = con;
 	vte->write_cb = write_cb;
 	vte->data = data;
-	vte->palette = get_palette(vte);
+	memcpy(vte->palette, get_palette(NULL), sizeof(vte->palette));
 	vte->def_attr.fccode = COLOR_FOREGROUND;
 	vte->def_attr.bccode = COLOR_BACKGROUND;
 	to_rgb(vte, &vte->def_attr);
@@ -478,21 +477,10 @@ static void new_palette(struct tsm_vte *vte, struct tsm_screen *con)
 SHL_EXPORT
 int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette)
 {
-	char *tmp = NULL;
-
 	if (!vte)
 		return -EINVAL;
 
-	if (palette) {
-		tmp = strdup(palette);
-		if (!tmp)
-			return -ENOMEM;
-	}
-
-	free(vte->palette_name);
-	vte->palette_name = tmp;
-
-	vte->palette = get_palette(vte);
+	memcpy(vte->palette, get_palette(palette), sizeof(vte->palette));
 	vte->def_attr.fccode = COLOR_FOREGROUND;
 	vte->def_attr.bccode = COLOR_BACKGROUND;
 
