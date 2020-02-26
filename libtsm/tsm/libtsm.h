@@ -312,6 +312,8 @@ void tsm_vte_ref(struct tsm_vte *vte);
 void tsm_vte_unref(struct tsm_vte *vte);
 
 int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette);
+int tsm_vte_set_palette_rgb(struct tsm_vte *vte, const uint8_t (*palette)[3]);
+const uint8_t (*tsm_vte_get_palette_rgb(struct tsm_vte *vte))[3];
 void tsm_vte_get_def_attr(struct tsm_vte *vte, struct tsm_screen_attr *out);
 
 void tsm_vte_reset(struct tsm_vte *vte);

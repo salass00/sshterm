@@ -477,10 +477,16 @@ static void new_palette(struct tsm_vte *vte, struct tsm_screen *con)
 SHL_EXPORT
 int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette)
 {
+	return tsm_vte_set_palette_rgb(vte, get_palette(palette));
+}
+
+SHL_EXPORT
+int tsm_vte_set_palette_rgb(struct tsm_vte *vte, const uint8_t (*palette)[3])
+{
 	if (!vte)
 		return -EINVAL;
 
-	memcpy(vte->palette, get_palette(palette), sizeof(vte->palette));
+	memcpy(vte->palette, palette, sizeof(vte->palette));
 	vte->def_attr.fccode = COLOR_FOREGROUND;
 	vte->def_attr.bccode = COLOR_BACKGROUND;
 
@@ -491,6 +497,15 @@ int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette)
 	new_palette(vte, vte->con);
 
 	return 0;
+}
+
+SHL_EXPORT
+const uint8_t (*tsm_vte_get_palette_rgb(struct tsm_vte *vte))[3]
+{
+	if (!vte)
+		return NULL;
+
+	return vte->palette;
 }
 
 SHL_EXPORT
