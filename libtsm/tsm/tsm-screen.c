@@ -1668,6 +1668,7 @@ void tsm_screen_erase_screen(struct tsm_screen *con, bool protect)
 			     protect);
 }
 
+SHL_EXPORT
 unsigned int tsm_screen_get_sb_top(struct tsm_screen *con)
 {
 	struct line *line, *pos;
@@ -1694,11 +1695,13 @@ unsigned int tsm_screen_get_sb_top(struct tsm_screen *con)
 	return y;
 }
 
+SHL_EXPORT
 unsigned int tsm_screen_get_sb_visible(struct tsm_screen *con)
 {
 	return con->size_y;
 }
 
+SHL_EXPORT
 unsigned int tsm_screen_get_sb_total(struct tsm_screen *con)
 {
 	if (con->flags & TSM_SCREEN_ALTERNATE)
