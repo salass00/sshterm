@@ -612,6 +612,13 @@ out:
 			ss->session = NULL;
 		}
 
+		if (ss->password != NULL)
+		{
+			memset(ss->password, 0xff, strlen(ss->password) + 1);
+			free(ss->password);
+			ss->password = NULL;
+		}
+
 		if (ss->socket != -1)
 		{
 			close(ss->socket);
