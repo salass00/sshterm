@@ -1623,14 +1623,16 @@ static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg)
 
 		while ((mblen = mbrtowc(&ucs4, u8, u8end - u8, &ps)) > 0)
 		{
-			tsm_vte_handle_keyboard_amiga(td->td_VTE, 0, 0, ucs4);
+			UWORD code = (ucs4 == '\n') ? RAWKEY_RETURN : 0;
+
+			tsm_vte_handle_keyboard_amiga(td->td_VTE, code, 0, ucs4);
 
 			u8 += mblen;
 		}
 
-		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
-
 		free(utf8);
+
+		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
 	}
 
 	return result;
