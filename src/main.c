@@ -518,21 +518,21 @@ int sshterm(int argc, char **argv)
 
 		if (FD_ISSET(ss->socket, &rfds))
 		{
-			ssize_t n;
+			ssize_t rs;
 
 			do {
-				n = libssh2_channel_read(ss->channel, ss->iobuf, sizeof(ss->iobuf));
+				rs = libssh2_channel_read(ss->channel, ss->iobuf, sizeof(ss->iobuf));
 
-				if (n > 0)
+				if (rs > 0)
 				{
-					termwin_write(termwin, ss->iobuf, n);
+					termwin_write(termwin, ss->iobuf, rs);
 				}
-				else if (n < 0 && n != LIBSSH2_ERROR_EAGAIN)
+				else if (rs < 0 && rs != LIBSSH2_ERROR_EAGAIN)
 				{
-					IExec->DebugPrintF("libssh2_channel_read: %d\n", n);
+					IExec->DebugPrintF("libssh2_channel_read: %d\n", rs);
 					goto out;
 				}
-			} while (n > 0);
+			} while (rs > 0);
 		}
 
 		if (FD_ISSET(ss->socket, &wfds))
@@ -551,28 +551,28 @@ int sshterm(int argc, char **argv)
 
 			if (termwin_poll(termwin))
 			{
-				char *p;
-				ssize_t size, n;
+				char *buffer;
+				ssize_t input_size, ws;
 
 				do {
-					size = termwin_read(termwin, ss->iobuf, sizeof(ss->iobuf));
+					input_size = termwin_read(termwin, ss->iobuf, sizeof(ss->iobuf));
 
-					p = ss->iobuf;
-					while (size > 0)
+					buffer = ss->iobuf;
+					while (input_size > 0)
 					{
-						n = libssh2_channel_write(ss->channel, p, size);
-						if (n > 0)
+						ws = libssh2_channel_write(ss->channel, buffer, input_size);
+						if (ws > 0)
 						{
-							p += n;
-							size -= n;
+							buffer += ws;
+							input_size -= ws;
 						}
-						else if (n < 0 && n != LIBSSH2_ERROR_EAGAIN)
+						else if (ws < 0 && ws != LIBSSH2_ERROR_EAGAIN)
 						{
-							IExec->DebugPrintF("libssh2_channel_write: %d\n", n);
+							IExec->DebugPrintF("libssh2_channel_write: %d\n", ws);
 							goto out;
 						}
 					}
-				} while (size > 0);
+				} while (input_size > 0);
 			}
 		}
 
