@@ -43,3 +43,6 @@ SSHTerm 1.5 (d.m.2020)
 
 - Fixed handling of newline characters in the TM_PASTE method.
 
+- Increased the i/o buffer size from 4096 to 32768 bytes for even better
+  performance.
+

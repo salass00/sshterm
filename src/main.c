@@ -131,7 +131,7 @@ struct ssh_session {
 	char            *password;
     LIBSSH2_AGENT   *agent;
 	const char      *keyfile;
-	char             iobuf[4096];
+	char             iobuf[32768];
 };
 
 static void kbd_callback(const char *name, int name_len, const char *instruction,
