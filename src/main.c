@@ -552,19 +552,20 @@ int sshterm(int argc, char **argv)
 			if (termwin_poll(termwin))
 			{
 				char *buffer;
-				ssize_t input_size, ws;
+				ssize_t input_size, remain, ws;
 
 				do {
 					input_size = termwin_read(termwin, ss->iobuf, sizeof(ss->iobuf));
 
 					buffer = ss->iobuf;
-					while (input_size > 0)
+					remain = input_size;
+					while (remain > 0)
 					{
-						ws = libssh2_channel_write(ss->channel, buffer, input_size);
+						ws = libssh2_channel_write(ss->channel, buffer, remain);
 						if (ws > 0)
 						{
 							buffer += ws;
-							input_size -= ws;
+							remain -= ws;
 						}
 						else if (ws < 0 && ws != LIBSSH2_ERROR_EAGAIN)
 						{
