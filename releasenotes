@@ -51,3 +51,6 @@ SSHTerm 1.5 (d.m.2020)
   would trigger this and lock up the terminal so that it could no longer be
   interacted with (thanks to kas1e for testing and reporting this).
 
+- Added palette menu for selecting which of the libtsm ANSI palettes to use
+  (the setting can't be saved for now).
+
