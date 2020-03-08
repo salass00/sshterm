@@ -97,6 +97,11 @@ static const struct NewMenu newmenus[] =
 	{ NM_TITLE, "Edit", NULL, 0, 0, (APTR)MID_EDIT_MENU },
 	{ NM_ITEM, "Copy", "C", 0, 0, (APTR)MID_EDIT_COPY },
 	{ NM_ITEM, "Paste", "V", 0, 0, (APTR)MID_EDIT_PASTE },
+	{ NM_TITLE, "Palette", NULL, 0, 0, (APTR)MID_PALETTE_MENU },
+	{ NM_ITEM, "Default", NULL, CHECKIT | CHECKED, ~1, (APTR)MID_PALETTE_DEFAULT },
+	{ NM_ITEM, "Solarized", NULL, CHECKIT, ~2, (APTR)MID_PALETTE_SOLARIZED },
+	{ NM_ITEM, "Solarized Black", NULL, CHECKIT, ~4, (APTR)MID_PALETTE_SOLARIZED_BLACK },
+	{ NM_ITEM, "Solarized White", NULL, CHECKIT, ~8, (APTR)MID_PALETTE_SOLARIZED_WHITE },
 	{ NM_END, NULL, NULL, 0, 0, NULL }
 };
 
