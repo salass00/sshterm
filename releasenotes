@@ -39,7 +39,7 @@ SSHTerm 1.4 (22.2.2020)
   recursion when it was used.
 
 
-SSHTerm 1.5 (d.m.2020)
+SSHTerm 1.5 (8.3.2020)
 
 - Fixed handling of newline characters in the TM_PASTE method.
 
