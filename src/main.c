@@ -189,6 +189,8 @@ int sshterm(int argc, char **argv)
 	BOOL done;
 	ULONG signals;
 	fd_set rfds, wfds;
+	struct timeval tv, *timeout;
+	ssize_t rs;
 	int retval = RETURN_ERROR;
 
 	memset(args, 0, sizeof(args));
@@ -483,6 +485,8 @@ int sshterm(int argc, char **argv)
 
 	done = FALSE;
 
+	rs = 0;
+
 	while (!done)
 	{
 		FD_ZERO(&rfds);
@@ -497,10 +501,20 @@ int sshterm(int argc, char **argv)
 
 		signals = termwin_get_signals(termwin);
 
+		if (rs != 0)
+		{
+			tv.tv_sec = tv.tv_usec = 0;
+			timeout = &tv;
+		}
+		else
+		{
+			timeout = NULL;
+		}
+
 		#ifdef __CLIB2__
-		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, &signals);
+		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, timeout, &signals);
 		#else
-		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, (unsigned int *)&signals);
+		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, timeout, (unsigned int *)&signals);
 		#endif
 		if (rc < 0)
 		{
@@ -516,11 +530,10 @@ int sshterm(int argc, char **argv)
 		if (termwin_handle_input(termwin))
 			done = TRUE;
 
-		if (FD_ISSET(ss->socket, &rfds))
+		if ((rs != 0) || FD_ISSET(ss->socket, &rfds))
 		{
-			ssize_t rs;
-
-			do {
+			do
+			{
 				rs = libssh2_channel_read(ss->channel, ss->iobuf, sizeof(ss->iobuf));
 
 				if (rs > 0)
@@ -532,7 +545,8 @@ int sshterm(int argc, char **argv)
 					IExec->DebugPrintF("libssh2_channel_read: %d\n", rs);
 					goto out;
 				}
-			} while (rs > 0);
+			}
+			while (0); //(rs > 0);
 		}
 
 		if (FD_ISSET(ss->socket, &wfds))
@@ -554,7 +568,8 @@ int sshterm(int argc, char **argv)
 				char *buffer;
 				ssize_t input_size, remain, ws;
 
-				do {
+				do
+				{
 					input_size = termwin_read(termwin, ss->iobuf, sizeof(ss->iobuf));
 
 					buffer = ss->iobuf;
@@ -573,7 +588,8 @@ int sshterm(int argc, char **argv)
 							goto out;
 						}
 					}
-				} while (input_size > 0);
+				}
+				while (input_size > 0);
 			}
 		}
 

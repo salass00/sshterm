@@ -46,3 +46,8 @@ SSHTerm 1.5 (d.m.2020)
 - Increased the i/o buffer size from 4096 to 32768 bytes for even better
   performance.
 
+- Rewrote the channel reading so that it no longer keeps reading infinitely
+  if there is a constant feed of data from the other end. Some libcaca demos
+  would trigger this and lock up the terminal so that it could no longer be
+  interacted with (thanks to kas1e for testing and reporting this).
+
