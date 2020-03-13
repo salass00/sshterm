@@ -61,6 +61,7 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb);
 void termwin_close(struct TermWindow *tw);
 void termwin_set_max_sb(struct TermWindow *tw, ULONG max_sb);
 void termwin_write(struct TermWindow *tw, const char *buffer, size_t len);
+void termwin_refresh(struct TermWindow *tw);
 ULONG termwin_get_signals(struct TermWindow *tw);
 BOOL termwin_handle_input(struct TermWindow *tw);
 size_t termwin_poll(struct TermWindow *tw);

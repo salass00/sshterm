@@ -540,6 +540,7 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 	{
 		IIntuition->DoRender(obj, ops->ops_GInfo, GREDRAW_UPDATE);
 		refresh = FALSE;
+		scroll = 0;
 	}
 	else if (scroll != 0 && ops->ops_GInfo != NULL)
 	{
@@ -1100,7 +1101,10 @@ static ULONG TERM_input(Class *cl, Object *obj, struct tpInput *tpi)
 		}
 	}
 
-	IIntuition->DoRender(obj, tpi->tpi_GInfo, GREDRAW_UPDATE);
+	if (tpi->tpi_GInfo != NULL)
+	{
+		IIntuition->DoRender(obj, tpi->tpi_GInfo, GREDRAW_UPDATE);
+	}
 
 	return 1;
 }
@@ -1244,8 +1248,10 @@ static ULONG TERM_handlemouse(Class *cl, Object *obj, struct tpMouse *tpm)
 		}
 	}
 
-	if (refresh)
+	if (refresh && tpm->tpm_GInfo != NULL)
+	{
 		IIntuition->DoRender(obj, tpm->tpm_GInfo, GREDRAW_UPDATE);
+	}
 
 	return 0;
 }
@@ -1632,7 +1638,10 @@ static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg)
 
 		free(utf8);
 
-		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
+		if (tpg->tpg_GInfo != NULL)
+		{
+			IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
+		}
 	}
 
 	return result;

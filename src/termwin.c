@@ -287,6 +287,19 @@ void termwin_write(struct TermWindow *tw, const char *buffer, size_t len)
 	tpi.tpi_Data   = buffer;
 	tpi.tpi_Length = len;
 
+	//DGM(tw->Term, tw->Window, (Msg)&tpi);
+	IIntuition->IDoMethodA(tw->Term, (Msg)&tpi);
+}
+
+void termwin_refresh(struct TermWindow *tw)
+{
+	struct tpInput tpi;
+
+	tpi.MethodID   = TM_INPUT;
+	tpi.tpi_GInfo  = NULL;
+	tpi.tpi_Data   = NULL;
+	tpi.tpi_Length = 0;
+
 	DGM(tw->Term, tw->Window, (Msg)&tpi);
 }
 
