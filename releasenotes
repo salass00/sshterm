@@ -55,7 +55,7 @@ SSHTerm 1.5 (8.3.2020)
   (the setting can't be saved for now).
 
 
-SSHTerm 1.6 (d.m.2020)
+SSHTerm 1.6 (13.3.2020)
 
 - Made further to changes to the channel read loop as the previous version's
   changes introduced some new problems. Also the terminal display is now only
