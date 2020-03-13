@@ -1079,30 +1079,30 @@ static ULONG TERM_input(Class *cl, Object *obj, struct tpInput *tpi)
 
 	tsm_vte_input(td->td_VTE, tpi->tpi_Data, tpi->tpi_Length);
 
-	top     = tsm_screen_get_sb_top(td->td_Con);
-	visible = tsm_screen_get_sb_visible(td->td_Con);
-	total   = tsm_screen_get_sb_total(td->td_Con);
-
-	if (top     != td->td_SBTop ||
-	    visible != td->td_SBVisible ||
-	    total   != td->td_SBTotal)
-	{
-		td->td_SBTop     = top;
-		td->td_SBVisible = visible;
-		td->td_SBTotal   = total;
-
-		if (td->td_Scroller != NULL)
-		{
-			SetAttrsGI(td->td_Scroller, tpi->tpi_GInfo,
-				SCROLLER_Total,   td->td_SBTotal,
-				SCROLLER_Visible, td->td_SBVisible,
-				SCROLLER_Top,     td->td_SBTop,
-				TAG_END);
-		}
-	}
-
 	if (tpi->tpi_GInfo != NULL)
 	{
+		top     = tsm_screen_get_sb_top(td->td_Con);
+		visible = tsm_screen_get_sb_visible(td->td_Con);
+		total   = tsm_screen_get_sb_total(td->td_Con);
+
+		if (top     != td->td_SBTop ||
+			visible != td->td_SBVisible ||
+			total   != td->td_SBTotal)
+		{
+			td->td_SBTop     = top;
+			td->td_SBVisible = visible;
+			td->td_SBTotal   = total;
+
+			if (td->td_Scroller != NULL)
+			{
+				SetAttrsGI(td->td_Scroller, tpi->tpi_GInfo,
+					SCROLLER_Total,   td->td_SBTotal,
+					SCROLLER_Visible, td->td_SBVisible,
+					SCROLLER_Top,     td->td_SBTop,
+					TAG_END);
+			}
+		}
+
 		IIntuition->DoRender(obj, tpi->tpi_GInfo, GREDRAW_UPDATE);
 	}
 
