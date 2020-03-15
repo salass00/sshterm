@@ -56,6 +56,7 @@ struct TermResizeHookMsg
 #define TM_HANDLEMOUSE     (TM_DUMMY + 3)
 #define TM_COPY            (TM_DUMMY + 4)
 #define TM_PASTE           (TM_DUMMY + 5)
+#define TM_CLEARSB         (TM_DUMMY + 6)
 
 struct tpInput
 {

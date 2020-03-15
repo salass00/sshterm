@@ -152,6 +152,7 @@ static ULONG TERM_handlekeyboard(Class *cl, Object *obj, struct tpKeyboard *tpk)
 static ULONG TERM_handlemouse(Class *cl, Object *obj, struct tpMouse *tpm);
 static ULONG TERM_copy(Class *cl, Object *obj, struct tpGeneric *tpg);
 static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg);
+static ULONG TERM_clearsb(Class *cl, Object *obj, struct tpGeneric *tpg);
 
 static ULONG TERM_dispatch(Class *cl, Object *obj, Msg msg)
 {
@@ -218,6 +219,10 @@ static ULONG TERM_dispatch(Class *cl, Object *obj, Msg msg)
 
 		case TM_PASTE:
 			result = TERM_paste(cl, obj, (struct tpGeneric *)msg);
+			break;
+
+		case TM_CLEARSB:
+			result = TERM_clearsb(cl, obj, (struct tpGeneric *)msg);
 			break;
 
 		default:
@@ -1639,5 +1644,19 @@ static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg)
 	}
 
 	return result;
+}
+
+static ULONG TERM_clearsb(Class *cl, Object *obj, struct tpGeneric *tpg)
+{
+	struct TermData *td = INST_DATA(cl, obj);
+
+	tsm_screen_clear_sb(td->td_Con);
+
+	if (tpg->tpg_GInfo != NULL)
+	{
+		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
+	}
+
+	return TRUE;
 }
 
