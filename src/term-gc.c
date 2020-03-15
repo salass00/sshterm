@@ -586,40 +586,6 @@ static ULONG TERM_domain(Class *cl, Object *obj, struct gpDomain *gpd)
 	return 1;
 }
 
-static void update_scroller(struct TermData *td, struct GadgetInfo *ginfo)
-{
-	ULONG top, visible, total;
-
-	top     = tsm_screen_get_sb_top(td->td_Con);
-	visible = tsm_screen_get_sb_visible(td->td_Con);
-	total   = tsm_screen_get_sb_total(td->td_Con);
-
-	if ((top + visible) > total)
-	{
-		ULONG newtop = total - visible;
-		tsm_screen_sb_up(td->td_Con, top - newtop);
-		top = newtop;
-	}
-
-	if (top     != td->td_SBTop ||
-	    visible != td->td_SBVisible ||
-	    total   != td->td_SBTotal)
-	{
-		td->td_SBTop     = top;
-		td->td_SBVisible = visible;
-		td->td_SBTotal   = total;
-
-		if (td->td_Scroller != NULL)
-		{
-			SetAttrsGI(td->td_Scroller, ginfo,
-				SCROLLER_Total,   td->td_SBTotal,
-				SCROLLER_Visible, td->td_SBVisible,
-				SCROLLER_Top,     td->td_SBTop,
-				TAG_END);
-		}
-	}
-}
-
 static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 {
 	struct TermData *td = INST_DATA(cl, obj);
@@ -642,6 +608,7 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 	if (columns != td->td_Columns || rows != td->td_Rows)
 	{
 		UNUSED int r;
+		ULONG top, visible, total;
 
 		r = tsm_screen_resize(td->td_Con, columns, rows);
 		#ifdef DEBUG
@@ -663,7 +630,34 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 			call_hook(td, td->td_ResizeHook, &trhm);
 		}
 
-		update_scroller(td, gpl->gpl_GInfo);
+		top     = tsm_screen_get_sb_top(td->td_Con);
+		visible = tsm_screen_get_sb_visible(td->td_Con);
+		total   = tsm_screen_get_sb_total(td->td_Con);
+
+		if ((top + visible) > total)
+		{
+			ULONG newtop = total - visible;
+			tsm_screen_sb_up(td->td_Con, top - newtop);
+			top = newtop;
+		}
+
+		if (top     != td->td_SBTop ||
+			visible != td->td_SBVisible ||
+			total   != td->td_SBTotal)
+		{
+			td->td_SBTop     = top;
+			td->td_SBVisible = visible;
+			td->td_SBTotal   = total;
+
+			if (td->td_Scroller != NULL)
+			{
+				SetAttrsGI(td->td_Scroller, gpl->gpl_GInfo,
+					SCROLLER_Total,   td->td_SBTotal,
+					SCROLLER_Visible, td->td_SBVisible,
+					SCROLLER_Top,     td->td_SBTop,
+					TAG_END);
+			}
+		}
 	}
 
 	td->td_Width = td->td_Columns * td->td_CellW;
