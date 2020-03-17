@@ -360,6 +360,28 @@ unsigned int tsm_ucs4_get_width(uint32_t ucs4)
 }
 
 SHL_EXPORT
+size_t tsm_ucs4_get_len(uint32_t g)
+{
+	if (g >= 0xd800 && g <= 0xdfff)
+		return 0;
+	if (g > 0x10ffff || (g & 0xffff) == 0xffff || (g & 0xffff) == 0xfffe)
+		return 0;
+	if (g >= 0xfdd0 && g <= 0xfdef)
+		return 0;
+
+	if (g < (1 << 7))
+		return 1;
+	else if (g < (1 << (5 + 6)))
+		return 2;
+	else if (g < (1 << (4 + 6 + 6)))
+		return 3;
+	else if (g < (1 << (3 + 6 + 6 + 6)))
+		return 4;
+	else
+		return 0;
+}
+
+SHL_EXPORT
 size_t tsm_ucs4_to_utf8(uint32_t g, char *txt)
 {
 	if (g >= 0xd800 && g <= 0xdfff)

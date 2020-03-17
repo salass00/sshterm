@@ -1543,7 +1543,6 @@ static BOOL read_clip(ULONG unit, STRPTR *utf8, ULONG *utf8_len)
 			TEXT ch;
 			STRPTR u8;
 			ULONG i, u8_len;
-			TEXT tmp[4];
 
 			maptable = (const ULONG *)IDiskfont->ObtainCharsetInfo(DFCS_NUMBER, charset, DFCS_MAPTABLE);
 			if (maptable == NULL)
@@ -1555,7 +1554,7 @@ static BOOL read_clip(ULONG unit, STRPTR *utf8, ULONG *utf8_len)
 				ch = text[i];
 				if (ch >= 128)
 				{
-					u8_len += tsm_ucs4_to_utf8(maptable[(UBYTE)ch], tmp);
+					u8_len += tsm_ucs4_get_len(maptable[(UBYTE)ch]);
 				}
 				else
 				{
