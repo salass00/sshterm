@@ -61,3 +61,8 @@ SSHTerm 1.6 (13.3.2020)
   changes introduced some new problems. Also the terminal display is now only
   refreshed once at the end of the loop instead of on every iteration.
 
+
+SSHTerm 1.7 (d.m.2020)
+
+- Added "Clear Scrollback" and "Copy All" operations to the menus.
+
