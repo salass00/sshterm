@@ -556,6 +556,8 @@ int tsm_screen_copy_all(struct tsm_screen *con, char **out)
 	}
 
 	for (i = 0; i < con->size_y; ++i) {
+		iter = con->lines[i];
+
 		pos += copy_line(iter, pos, 0, con->size_x);
 
 		*pos++ = '\n';
