@@ -57,6 +57,7 @@ enum {
 	MID_PROJECT_CLOSE,
 	MID_EDIT_MENU,
 	MID_EDIT_COPY,
+	MID_EDIT_COPYALL,
 	MID_EDIT_PASTE,
 	MID_PALETTE_MENU,
 	MID_PALETTE_DEFAULT,
@@ -96,6 +97,7 @@ static const struct NewMenu newmenus[] =
 	{ NM_ITEM, "Close", "K", 0, 0, (APTR)MID_PROJECT_CLOSE },
 	{ NM_TITLE, "Edit", NULL, 0, 0, (APTR)MID_EDIT_MENU },
 	{ NM_ITEM, "Copy", "C", 0, 0, (APTR)MID_EDIT_COPY },
+	{ NM_ITEM, "Copy All", NULL, 0, 0, (APTR)MID_EDIT_COPYALL },
 	{ NM_ITEM, "Paste", "V", 0, 0, (APTR)MID_EDIT_PASTE },
 	{ NM_TITLE, "Palette", NULL, 0, 0, (APTR)MID_PALETTE_MENU },
 	{ NM_ITEM, "Default", NULL, CHECKIT | CHECKED, ~1, (APTR)MID_PALETTE_DEFAULT },
@@ -134,6 +136,7 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 		NM_Item, "Close", MA_ID, MID_PROJECT_CLOSE, MA_Key, "K",
 		NM_Menu, "Edit", MA_ID, MID_EDIT_MENU,
 		NM_Item, "Copy", MA_ID, MID_EDIT_COPY, MA_Key, "C",
+		NM_Item, "Copy All", MA_ID, MID_EDIT_COPYALL,
 		NM_Item, "Paste", MA_ID, MID_EDIT_PASTE, MA_Key, "V",
 		NM_Menu, "Palette", MA_ID, MID_PALETTE_MENU,
 		NM_Item, "Default", MA_ID, MID_PALETTE_DEFAULT, MA_MX, ~1, MA_Selected, TRUE,
@@ -421,6 +424,13 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 
 						case MID_EDIT_COPY:
 							tpg.MethodID  = TM_COPY;
+							tpg.tpg_GInfo = NULL;
+
+							IIntuition->IDoMethodA(tw->Term, (Msg)&tpg);
+							break;
+
+						case MID_EDIT_COPYALL:
+							tpg.MethodID  = TM_COPYALL;
 							tpg.tpg_GInfo = NULL;
 
 							IIntuition->IDoMethodA(tw->Term, (Msg)&tpg);
