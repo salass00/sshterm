@@ -1658,6 +1658,19 @@ static ULONG TERM_clearsb(Class *cl, Object *obj, struct tpGeneric *tpg)
 
 	if (tpg->tpg_GInfo != NULL)
 	{
+		td->td_SBTop     = tsm_screen_get_sb_top(td->td_Con);
+		td->td_SBVisible = tsm_screen_get_sb_visible(td->td_Con);
+		td->td_SBTotal   = tsm_screen_get_sb_total(td->td_Con);
+
+		if (td->td_Scroller != NULL)
+		{
+			SetAttrsGI(td->td_Scroller, tpg->tpg_GInfo,
+				SCROLLER_Total,   td->td_SBTotal,
+				SCROLLER_Visible, td->td_SBVisible,
+				SCROLLER_Top,     td->td_SBTop,
+				TAG_END);
+		}
+
 		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
 	}
 
