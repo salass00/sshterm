@@ -54,6 +54,7 @@ enum {
 	MID_PROJECT_MENU,
 	MID_PROJECT_ICONIFY,
 	MID_PROJECT_ABOUT,
+	MID_PROJECT_CLEARSB,
 	MID_PROJECT_CLOSE,
 	MID_EDIT_MENU,
 	MID_EDIT_COPY,
@@ -94,6 +95,8 @@ static const struct NewMenu newmenus[] =
 	{ NM_ITEM, "Iconify", "I", 0, 0, (APTR)MID_PROJECT_ICONIFY },
 	{ NM_ITEM, "About...", "?", 0, 0, (APTR)MID_PROJECT_ABOUT },
 	{ NM_ITEM, NM_BARLABEL, NULL, 0, 0, NULL },
+	{ NM_ITEM, "Clear Scrollback", NULL, 0, 0, (APTR)MID_PROJECT_CLEARSB },
+	{ NM_ITEM, NM_BARLABEL, NULL, 0, 0, NULL },
 	{ NM_ITEM, "Close", "K", 0, 0, (APTR)MID_PROJECT_CLOSE },
 	{ NM_TITLE, "Edit", NULL, 0, 0, (APTR)MID_EDIT_MENU },
 	{ NM_ITEM, "Copy", "C", 0, 0, (APTR)MID_EDIT_COPY },
@@ -132,6 +135,8 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 		NM_Menu, "Project", MA_ID, MID_PROJECT_MENU,
 		NM_Item, "Iconify", MA_ID, MID_PROJECT_ICONIFY, MA_Key, "I",
 		NM_Item, "About...", MA_ID, MID_PROJECT_ABOUT, MA_Key, "?",
+		NM_Item, ML_SEPARATOR,
+		NM_Item, "Clear Scrollback", MA_ID, MID_PROJECT_CLEARSB,
 		NM_Item, ML_SEPARATOR,
 		NM_Item, "Close", MA_ID, MID_PROJECT_CLOSE, MA_Key, "K",
 		NM_Menu, "Edit", MA_ID, MID_EDIT_MENU,
@@ -416,6 +421,13 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 
 						case MID_PROJECT_ABOUT:
 							aboutwin_open(tw->Screen);
+							break;
+
+						case MID_PROJECT_CLEARSB:
+							tpg.MethodID  = TM_CLEARSB;
+							tpg.tpg_GInfo = NULL;
+
+							DGM(tw->Term, tw->Window, (Msg)&tpg);
 							break;
 
 						case MID_PROJECT_CLOSE:
