@@ -263,6 +263,7 @@ void tsm_screen_selection_word(struct tsm_screen *con,
 void tsm_screen_selection_line(struct tsm_screen *con,
                                unsigned int posy);
 int tsm_screen_selection_copy(struct tsm_screen *con, char **out);
+int tsm_screen_copy_all(struct tsm_screen *con, char **out);
 
 tsm_age_t tsm_screen_draw(struct tsm_screen *con, tsm_screen_draw_cb draw_cb,
 			  void *data);

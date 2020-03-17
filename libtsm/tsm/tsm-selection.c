@@ -509,3 +509,60 @@ int tsm_screen_selection_copy(struct tsm_screen *con, char **out)
 	*out = str;
 	return pos - str;
 }
+
+SHL_EXPORT
+int tsm_screen_copy_all(struct tsm_screen *con, char **out)
+{
+	unsigned int len, i;
+	struct line *iter;
+	char *str, *pos;
+
+	if (!con || !out)
+		return -EINVAL;
+
+	/* calculate size of buffer */
+	len = 0;
+	iter = con->sb_first;
+
+	while (iter) {
+		len += iter->size;
+
+		++len;
+		iter = iter->next;
+	}
+
+	for (i = 0; i < con->size_y; ++i) {
+		len += con->size_x;
+
+		++len;
+	}
+
+	/* allocate buffer */
+	len *= 4;
+	++len;
+	str = malloc(len);
+	if (!str)
+		return -ENOMEM;
+	pos = str;
+
+	/* copy data into buffer */
+	iter = con->sb_first;
+
+	while (iter) {
+		pos += copy_line(iter, pos, 0, iter->size);
+
+		*pos++ = '\n';
+		iter = iter->next;
+	}
+
+	for (i = 0; i < con->size_y; ++i) {
+		pos += copy_line(iter, pos, 0, con->size_x);
+
+		*pos++ = '\n';
+	}
+
+	/* return buffer */
+	*pos = 0;
+	*out = str;
+	return pos - str;
+}
