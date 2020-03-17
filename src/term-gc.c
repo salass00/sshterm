@@ -214,6 +214,7 @@ static ULONG TERM_dispatch(Class *cl, Object *obj, Msg msg)
 			break;
 
 		case TM_COPY:
+		case TM_COPYALL:
 			result = TERM_copy(cl, obj, (struct tpGeneric *)msg);
 			break;
 
@@ -1404,7 +1405,11 @@ static ULONG TERM_copy(Class *cl, Object *obj, struct tpGeneric *tpg)
 	ULONG utf8_len;
 	ULONG result = 0;
 
-	utf8_len = tsm_screen_selection_copy(td->td_Con, &utf8);
+	if (tpg->MethodID == TM_COPY)
+		utf8_len = tsm_screen_selection_copy(td->td_Con, &utf8);
+	else
+		utf8_len = tsm_screen_copy_all(td->td_Con, &utf8);
+
 	if (utf8_len > 0)
 	{
 		result = write_clip(PRIMARY_CLIP, utf8, utf8_len);
