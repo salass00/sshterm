@@ -1,6 +1,7 @@
 /*
  * libtsm - Unicode Handling
  *
+ * Copyright (c) 2019-2020 Fredrik Wikstrom <fredrik@a500.org>
  * Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -57,7 +58,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
-#include "external/wcwidth.h"
+#include "wcwidth/wcwidth.h"
 #include "libtsm.h"
 #include "libtsm-int.h"
 #include "shl-array.h"
@@ -327,6 +328,18 @@ unsigned int tsm_symbol_get_width(struct tsm_symbol_table *tbl,
 	return tsm_ucs4_get_width(*ch);
 }
 
+SHL_EXPORT
+unsigned int tsm_ucs4_get_width(uint32_t ucs4)
+{
+	int ret;
+
+	ret = wcwidth(ucs4);
+	if (ret <= 0)
+		return 0;
+
+	return ret;
+}
+
 /*
  * Convert UCS4 character to UTF-8. This creates one of:
  *   0xxxxxxx
@@ -346,18 +359,6 @@ unsigned int tsm_symbol_get_width(struct tsm_symbol_table *tbl,
  * greater than 0x10FFFF, the range 0xFDD0-0xFDEF and codepoints ending with
  * 0xFFFF or 0xFFFE.
  */
-
-SHL_EXPORT
-unsigned int tsm_ucs4_get_width(uint32_t ucs4)
-{
-	int ret;
-
-	ret = mk_wcwidth(ucs4);
-	if (ret <= 0)
-		return 0;
-
-	return ret;
-}
 
 SHL_EXPORT
 size_t tsm_ucs4_get_len(uint32_t g)

@@ -1,11 +1,10 @@
 = Authors =
 
 This software was written by:
+	Aetf <aetf@unlimitedcodeworks.xyz>
 	David Herrmann <dh.herrmann@gmail.com>
-	Ran Benita <ran234@gmail.com>
-
-AmigaOS changes and optimization of aging code:
 	Fredrik Wikstrom <fredrik@a500.org>
+	Ran Benita <ran234@gmail.com>
 
 = Copyright Notice =
 
@@ -15,6 +14,8 @@ source file for the related copyright notice and license.
 If a file does not contain a copright notice, the following license shall
 apply:
 
+	Copyright (c) 2019-2020 Fredrik Wikstrom <fredrik@a500.org>
+	Copyright (c) 2017-2018 Aetf <aetf@unlimitedcodeworks.xyz>
 	Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
 
 	Permission is hereby granted, free of charge, to any person obtaining
@@ -37,21 +38,22 @@ apply:
 	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 == Third-Party Source ==
+Various cmake find modules in cmake/modules/gnome-cmake is from
+https://github.com/nemequ/gnome-cmake, see cmake/modules/gnome-cmake/COPYING
 
-The hash-table implementation in external/htable.* is copied from ccan and
-licensed under the conditions of the LGPL-2.1 or later as published by the FSF:
+The hash-table implementation in src/shared/shl-htable.* uses internally the
+htable from CCAN, see LICENSE_htable.
 
-	Author: Rusty Russel <rusty@rustcorp.com.au>
+The wcwidth() implementation in ./external/wcwidth is from
 
-The wcwidth() implementation in ./external/wcwidth.c is from:
-
-	Markus Kuhn -- 2007-05-26 (Unicode 5.0)
-
-	Permission to use, copy, modify, and distribute this software
-	for any purpose and without fee is hereby granted. The author
-	disclaims all warranties with regard to this software.
-
-	Latest version: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
+	Copyright (C) Fredrik Fornwall 2016.
+	Distributed under the MIT License.
+	
+	Implementation of wcwidth(3) as a C port of:
+	https://github.com/jquast/wcwidth
+	
+	Report issues at:
+	https://github.com/termux/wcwidth
 
 UCS-4 to UTF-8 encoding is copied from "terminology":
 

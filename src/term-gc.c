@@ -702,7 +702,7 @@ static TEXT map_unicode(const ULONG *maptable, ULONG unicode)
 	return ch;
 }
 
-static int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
+static int tsm_draw_cb(struct tsm_screen *con, uint64_t id,
                        const uint32_t *ch, size_t len, unsigned int width,
                        unsigned int posx, unsigned int posy,
                        const struct tsm_screen_attr *attr, tsm_age_t age,

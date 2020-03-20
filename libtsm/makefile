@@ -5,7 +5,7 @@ RANLIB = ppc-amigaos-ranlib
 OPTIMIZE = -O2
 DEBUG    = -g
 WARNINGS = -Wall -Wwrite-strings -Werror
-INCLUDES = -I. -I./shared
+INCLUDES = -I. -I./external -I./shared
 DEFINES  = 
 
 CFLAGS  = $(OPTIMIZE) $(DEBUG) $(WARNINGS) $(INCLUDES) $(DEFINES)
@@ -18,7 +18,7 @@ SRCS = tsm/tsm-render.c \
        tsm/tsm-vte-charsets.c \
        shared/shl-htable.c \
        shared/shl-ring.c \
-       external/wcwidth.c
+       external/wcwidth/wcwidth.c
 
 OBJS = $(SRCS:.c=.o)
 

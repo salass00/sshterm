@@ -66,3 +66,5 @@ SSHTerm 1.7 (d.m.2020)
 
 - Added "Clear Scrollback" and "Copy All" operations to the menus.
 
+- Merged in changes from Aetf's libtsm (https://github.com/Aetf/libtsm).
+

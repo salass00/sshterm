@@ -52,6 +52,7 @@ tsm_age_t tsm_screen_draw(struct tsm_screen *con, tsm_screen_draw_cb draw_cb,
 	struct tsm_screen_attr attr;
 	int ret, warned = 0;
 	const uint32_t *ch;
+	uint64_t id;
 	size_t len;
 	bool in_sel = false, sel_start = false, sel_end = false;
 	bool was_sel = false;
@@ -161,11 +162,24 @@ tsm_age_t tsm_screen_draw(struct tsm_screen *con, tsm_screen_draw_cb draw_cb,
 					age = con->age;
 			}
 
+			/* Encode attributes into the id to avoid caching problems */
+			id = cell->ch;
+			if (attr.bold)
+				id |= 1ULL << TSM_UCS4_MAX_BITS;
+			if (attr.italic)
+				id |= 1ULL << (TSM_UCS4_MAX_BITS + 1);
+			if (attr.underline)
+				id |= 1ULL << (TSM_UCS4_MAX_BITS + 2);
+			if (attr.inverse)
+				id |= 1ULL << (TSM_UCS4_MAX_BITS + 3);
+			if (attr.blink)
+				id |= 1ULL << (TSM_UCS4_MAX_BITS + 4);
+
 			ch = tsm_symbol_get(con->sym_table, &cell->ch, &len);
-			if (cell->ch == ' ' || cell->ch == 0)
+			if (cell->ch == 0 || (cell->ch == ' ' && !attr.underline))
 				len = 0;
-			ret = draw_cb(con, cell->ch, ch, len, cell->width,
-				      j, i, &attr, age, data);
+			ret = draw_cb(con, id, ch, len, cell->width,
+			              j, i, &attr, age, data);
 			if (ret && warned++ < 3) {
 				llog_debug(con,
 					   "cannot draw glyph at %ux%u via text-renderer",
