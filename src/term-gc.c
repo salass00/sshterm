@@ -545,7 +545,7 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 				td->td_ResizeHook = (struct Hook *)tag->ti_Data;
 				break;
 
-			case TERM_Palette:
+			case TERM_BuiltInPalette:
 				if (tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data) == 0)
 				{
 					refresh = TRUE;

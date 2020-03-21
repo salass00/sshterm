@@ -25,19 +25,19 @@
 #include <intuition/classes.h>
 #include <intuition/cghooks.h>
 
-#define TERM_Dummy         (0x80840000)
-#define TERM_Columns       (TERM_Dummy + 1)
-#define TERM_Rows          (TERM_Dummy + 2)
-#define TERM_OutputHook    (TERM_Dummy + 3)
-#define TERM_Font          (TERM_Dummy + 4)
-#define TERM_MaxScrollback (TERM_Dummy + 5)
-#define TERM_Scroller      (TERM_Dummy + 6)
-#define TERM_SBTop         (TERM_Dummy + 7)
-#define TERM_SBVisible     (TERM_Dummy + 8)
-#define TERM_SBTotal       (TERM_Dummy + 9)
-#define TERM_ResizeHook    (TERM_Dummy + 10)
-#define TERM_Palette       (TERM_Dummy + 11)
-#define TERM_Screen        (TERM_Dummy + 12)
+#define TERM_Dummy          (0x80840000)
+#define TERM_Columns        (TERM_Dummy + 1)
+#define TERM_Rows           (TERM_Dummy + 2)
+#define TERM_OutputHook     (TERM_Dummy + 3)
+#define TERM_Font           (TERM_Dummy + 4)
+#define TERM_MaxScrollback  (TERM_Dummy + 5)
+#define TERM_Scroller       (TERM_Dummy + 6)
+#define TERM_SBTop          (TERM_Dummy + 7)
+#define TERM_SBVisible      (TERM_Dummy + 8)
+#define TERM_SBTotal        (TERM_Dummy + 9)
+#define TERM_ResizeHook     (TERM_Dummy + 10)
+#define TERM_BuiltInPalette (TERM_Dummy + 11)
+#define TERM_Screen         (TERM_Dummy + 12)
 
 struct TermOutputHookMsg
 {

@@ -283,7 +283,7 @@ void termwin_set_palette(struct TermWindow *tw, const char *palette)
 	window = (struct Window *)GET(tw->Window, WINDOW_Window);
 
 	IIntuition->SetGadgetAttrs((struct Gadget *)tw->Term, window, NULL,
-		TERM_Palette, palette,
+		TERM_BuiltInPalette, palette,
 		TAG_END);
 }
 
