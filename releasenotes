@@ -68,5 +68,7 @@ SSHTerm 1.7 (d.m.2020)
 
 - Merged in changes from Aetf's libtsm (https://github.com/Aetf/libtsm).
 
+- Added support for ctrl+cursor keys.
+
 - Implemented the bell control character using IIntuition->DisplayBeep().
 
