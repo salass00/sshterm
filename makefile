@@ -40,8 +40,10 @@ obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(LIBSSH2DIR)/libssh2.a: build-libssh2
+	@true
 
 libtsm/libtsm.a: build-libtsm
+	@true
 
 obj/start.o: src/sshterm.h src/term-gc.h $(TARGET)_rev.h
 obj/main.o: src/sshterm.h $(TARGET)_rev.h
