@@ -1,6 +1,7 @@
 /*
  * TSM - Main Header
  *
+ * Copyright (c) 2019-2020 Fredrik Wikstrom <fredrik@a500.org>
  * Copyright (c) 2018 Aetf <aetf@unlimitedcodeworks.xyz>
  * Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
  *
@@ -335,6 +336,9 @@ typedef void (*tsm_vte_write_cb) (struct tsm_vte *vte,
                                   size_t len,
                                   void *data);
 
+typedef void (*tsm_vte_bell_cb) (struct tsm_vte *vte,
+                                 void *data);
+
 typedef void (*tsm_vte_osc_cb) (struct tsm_vte *vte,
                                 const char *u8,
                                 size_t len,
@@ -345,6 +349,8 @@ int tsm_vte_new(struct tsm_vte **out, struct tsm_screen *con,
                 tsm_log_t log, void *log_data);
 void tsm_vte_ref(struct tsm_vte *vte);
 void tsm_vte_unref(struct tsm_vte *vte);
+
+void tsm_vte_set_bell_cb(struct tsm_vte *vte, tsm_vte_bell_cb bell_cb, void *bell_data);
 
 void tsm_vte_set_osc_cb(struct tsm_vte *vte, tsm_vte_osc_cb osc_cb, void *osc_data);
 

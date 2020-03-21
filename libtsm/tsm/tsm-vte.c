@@ -191,6 +191,9 @@ struct tsm_vte {
 	int csi_argv[CSI_ARG_MAX];
 	unsigned int csi_flags;
 
+	tsm_vte_bell_cb bell_cb;
+	void *bell_data;
+
 	tsm_vte_osc_cb osc_cb;
 	void *osc_data;
 	unsigned int osc_len;
@@ -514,6 +517,17 @@ void tsm_vte_unref(struct tsm_vte *vte)
 	free(vte);
 }
 
+SHL_EXPORT
+void tsm_vte_set_bell_cb(struct tsm_vte *vte, tsm_vte_bell_cb bell_cb, void *bell_data)
+{
+	if (!vte)
+		return;
+
+	vte->bell_cb = bell_cb;
+	vte->bell_data = bell_data;
+}
+
+SHL_EXPORT
 void tsm_vte_set_osc_cb(struct tsm_vte *vte, tsm_vte_osc_cb osc_cb, void *osc_data)
 {
 	if (!vte)
@@ -813,10 +827,8 @@ static void do_execute(struct tsm_vte *vte, uint32_t ctrl)
 		break;
 	case 0x07: /* BEL */
 		/* Sound bell tone */
-		/* TODO: I always considered this annying, however, we
-		 * should at least provide some way to enable it if the
-		 * user *really* wants it.
-		 */
+		if (vte->bell_cb)
+			vte->bell_cb(vte, vte->bell_data);
 		break;
 	case 0x08: /* BS */
 		/* Move cursor one position left */
