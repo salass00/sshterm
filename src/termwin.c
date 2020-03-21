@@ -64,7 +64,10 @@ enum {
 	MID_PALETTE_DEFAULT,
 	MID_PALETTE_SOLARIZED,
 	MID_PALETTE_SOLARIZED_BLACK,
-	MID_PALETTE_SOLARIZED_WHITE
+	MID_PALETTE_SOLARIZED_WHITE,
+	MID_PALETTE_SOFT_BLACK,
+	MID_PALETTE_BASE16_DARK,
+	MID_PALETTE_BASE16_LIGHT
 };
 
 static inline ULONG GET(Object *obj, ULONG attr)
@@ -107,6 +110,9 @@ static const struct NewMenu newmenus[] =
 	{ NM_ITEM, "Solarized", NULL, CHECKIT, ~2, (APTR)MID_PALETTE_SOLARIZED },
 	{ NM_ITEM, "Solarized Black", NULL, CHECKIT, ~4, (APTR)MID_PALETTE_SOLARIZED_BLACK },
 	{ NM_ITEM, "Solarized White", NULL, CHECKIT, ~8, (APTR)MID_PALETTE_SOLARIZED_WHITE },
+	{ NM_ITEM, "Soft Black", NULL, CHECKIT, ~16, (APTR)MID_PALETTE_SOFT_BLACK },
+	{ NM_ITEM, "Base16 Dark", NULL, CHECKIT, ~32, (APTR)MID_PALETTE_BASE16_DARK },
+	{ NM_ITEM, "Base16 Light", NULL, CHECKIT, ~64, (APTR)MID_PALETTE_BASE16_LIGHT },
 	{ NM_END, NULL, NULL, 0, 0, NULL }
 };
 
@@ -148,6 +154,9 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 		NM_Item, "Solarized", MA_ID, MID_PALETTE_SOLARIZED, MA_MX, ~2,
 		NM_Item, "Solarized Black", MA_ID, MID_PALETTE_SOLARIZED_BLACK, MA_MX, ~4,
 		NM_Item, "Solarized White", MA_ID, MID_PALETTE_SOLARIZED_WHITE, MA_MX, ~8,
+		NM_Item, "Soft Black", MA_ID, MID_PALETTE_SOFT_BLACK, MA_MX, ~16,
+		NM_Item, "Base16 Dark", MA_ID, MID_PALETTE_BASE16_DARK, MA_MX, ~32,
+		NM_Item, "Base16 Light", MA_ID, MID_PALETTE_BASE16_LIGHT, MA_MX, ~64,
 		TAG_END);
 	if (tw->MenuStrip == NULL)
 	{
@@ -391,7 +400,10 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 		NULL,
 		"solarized",
 		"solarized-black",
-		"solarized-white"
+		"solarized-white",
+		"soft-black",
+		"base16-dark",
+		"base16-light"
 	};
 
 	while ((result = IIntuition->IDoMethod(tw->Window, WM_HANDLEINPUT, &code)) != WMHI_LASTMSG)
@@ -460,6 +472,9 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 						case MID_PALETTE_SOLARIZED:
 						case MID_PALETTE_SOLARIZED_BLACK:
 						case MID_PALETTE_SOLARIZED_WHITE:
+						case MID_PALETTE_SOFT_BLACK:
+						case MID_PALETTE_BASE16_DARK:
+						case MID_PALETTE_BASE16_LIGHT:
 							termwin_set_palette(tw, palette_name[mid - MID_PALETTE_DEFAULT]);
 							break;
 					}

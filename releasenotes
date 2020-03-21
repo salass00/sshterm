@@ -70,5 +70,7 @@ SSHTerm 1.7 (d.m.2020)
 
 - Added support for ctrl+cursor keys.
 
+- Added a few more palettes to choose from.
+
 - Implemented the bell control character using IIntuition->DisplayBeep().
 
