@@ -19,6 +19,8 @@ CFLAGS  = $(OPTIMIZE) $(DEBUG) $(INCLUDES) $(WARNINGS) $(DEFINES)
 LDFLAGS = -static
 LIBS    = 
 
+STRIPFLAGS = -R.comment --strip-unneeded-rel-relocs
+
 SRCS = start.c main.c termwin.c menus.c about.c signal-pid.c term-gc.c \
        bsdsocket-stubs.c amissl-stubs.c zlib-stubs.c malloc.c
 
