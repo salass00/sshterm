@@ -111,6 +111,8 @@ struct TermData
 	ULONG              td_SkipCount;
 	ULONG              td_UpdateCount;
 	#endif
+
+	struct Screen     *td_Screen;
 };
 
 enum {
@@ -269,6 +271,13 @@ static void tsm_write_cb(struct tsm_vte *vte, const char *u8,
 	}
 }
 
+static void tsm_bell_cb(struct tsm_vte *vte, void *data)
+{
+	struct TermData *td = data;
+
+	IIntuition->DisplayBeep(td->td_Screen);
+}
+
 static ULONG TERM_new(Class *cl, Object *obj, struct opSet *ops)
 {
 	obj = (Object *)IIntuition->IDoSuperMethodA(cl, obj, (Msg)ops);
@@ -296,6 +305,8 @@ static ULONG TERM_new(Class *cl, Object *obj, struct opSet *ops)
 			IIntuition->ICoerceMethod(cl, obj, OM_DISPOSE);
 			return (ULONG)NULL;
 		}
+
+		tsm_vte_set_bell_cb(td->td_VTE, tsm_bell_cb, td);
 
 		td->td_Columns = tsm_screen_get_width(td->td_Con);
 		td->td_Rows    = tsm_screen_get_height(td->td_Con);
@@ -538,6 +549,10 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 				tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data);
 				/* Force a complete refresh */
 				refresh = TRUE;
+				break;
+
+			case TERM_Screen:
+				td->td_Screen = (struct Screen *)tag->ti_Data;
 				break;
 		}
 	}

@@ -171,6 +171,7 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 	tw->ResizeHook.h_Data  = tw;
 
 	tw->Term = IIntuition->NewObject(TermClass, NULL,
+		TERM_Screen,     tw->Screen,
 		TERM_OutputHook, &tw->OutputHook,
 		TERM_ResizeHook, &tw->ResizeHook,
 		TAG_END);
