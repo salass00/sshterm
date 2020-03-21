@@ -546,9 +546,10 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 				break;
 
 			case TERM_Palette:
-				tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data);
-				/* Force a complete refresh */
-				refresh = TRUE;
+				if (tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data) == 0)
+				{
+					refresh = TRUE;
+				}
 				break;
 
 			case TERM_Screen:

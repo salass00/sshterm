@@ -390,7 +390,7 @@ static const uint8_t (*get_palette(const char *palette_name))[3]
 	if (!strcmp(palette_name, "base16-light"))
 		return color_palette_base16_light;
 
-	return color_palette;
+	return NULL;
 }
 
 /* Several effects may occur when non-RGB colors are used. For instance, if bold
@@ -471,7 +471,7 @@ int tsm_vte_new(struct tsm_vte **out, struct tsm_screen *con,
 	vte->data = data;
 	vte->osc_cb = NULL;
 	vte->osc_data = NULL;
-	memcpy(vte->palette, get_palette(NULL), sizeof(vte->palette));
+	memcpy(vte->palette, color_palette, sizeof(vte->palette));
 	vte->def_attr.fccode = TSM_COLOR_FOREGROUND;
 	vte->def_attr.bccode = TSM_COLOR_BACKGROUND;
 	to_rgb(vte, &vte->def_attr);
@@ -591,7 +591,13 @@ static int vte_update_palette(struct tsm_vte *vte)
 SHL_EXPORT
 int tsm_vte_set_palette(struct tsm_vte *vte, const char *palette_name)
 {
-	return tsm_vte_set_palette_rgb(vte, get_palette(palette_name));
+	const uint8_t (*palette)[3];
+
+	palette = get_palette(palette_name);
+	if (!palette)
+		return -ENOENT;
+
+	return tsm_vte_set_palette_rgb(vte, palette);
 }
 
 SHL_EXPORT
