@@ -2836,14 +2836,18 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 			return true;
 		case XKB_KEY_Home:
 		case XKB_KEY_KP_Home:
-			if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			if (mods & TSM_CONTROL_MASK)
+				vte_write(vte, "\e[1;5H", 6);
+			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOH", 3);
 			else
 				vte_write(vte, "\e[H", 3);
 			return true;
 		case XKB_KEY_End:
 		case XKB_KEY_KP_End:
-			if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			if (mods & TSM_CONTROL_MASK)
+				vte_write(vte, "\e[1;5F", 6);
+			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOF", 3);
 			else
 				vte_write(vte, "\e[F", 3);
@@ -3255,13 +3259,17 @@ bool tsm_vte_handle_keyboard_amiga(struct tsm_vte *vte, uint16_t code,
 				vte_write(vte, "\e[D", 3);
 			return true;
 		case RAWKEY_HOME:
-			if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			if (qualifier & IEQUALIFIER_CONTROL)
+				vte_write(vte, "\e[1;5H", 6);
+			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOH", 3);
 			else
 				vte_write(vte, "\e[H", 3);
 			return true;
 		case RAWKEY_END:
-			if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			if (qualifier & IEQUALIFIER_CONTROL)
+				vte_write(vte, "\e[1;5F", 6);
+			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOF", 3);
 			else
 				vte_write(vte, "\e[F", 3);

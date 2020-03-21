@@ -68,7 +68,7 @@ SSHTerm 1.7 (d.m.2020)
 
 - Merged in changes from Aetf's libtsm (https://github.com/Aetf/libtsm).
 
-- Added support for ctrl+cursor keys.
+- Added support for ctrl+cursor key, ctrl+home and ctrl+end.
 
 - Added a few more palettes to choose from.
 
