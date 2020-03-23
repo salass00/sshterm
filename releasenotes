@@ -74,3 +74,5 @@ SSHTerm 1.7 (23.3.2020)
 
 - Implemented the bell control character using IIntuition->DisplayBeep().
 
+- Compiled using AmiSSL 4.4.
+
