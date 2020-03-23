@@ -62,7 +62,7 @@ SSHTerm 1.6 (13.3.2020)
   refreshed once at the end of the loop instead of on every iteration.
 
 
-SSHTerm 1.7 (d.m.2020)
+SSHTerm 1.7 (23.3.2020)
 
 - Added "Clear Scrollback" and "Copy All" operations to the menus.
 
