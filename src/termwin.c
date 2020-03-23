@@ -41,8 +41,7 @@ struct TermWindow {
 	Object                *Layout;
 	Object                *Term;
 	struct Hook            IDCMPHook;
-	struct Hook            OutputHook;
-	struct Hook            ResizeHook;
+	struct Hook            TermHook;
 	struct shl_ring        RingBuffer;
 	UWORD                  Columns;
 	UWORD                  Rows;
@@ -88,9 +87,8 @@ static inline ULONG DGM(Object *obj, Object *winobj, Msg msg)
 	return IIntuition->DoGadgetMethodA((struct Gadget *)obj, window, NULL, msg);
 }
 
+static ULONG term_hook_cb(struct Hook *hook, Object *term, struct TermHookMsg *thm);
 static ULONG term_idcmp_cb(struct Hook *hook, Object *winobj, struct IntuiMessage *imsg);
-static ULONG term_output_cb(struct Hook *hook, Object *obj, struct TermOutputHookMsg *tohm);
-static ULONG term_resize_cb(struct Hook *hook, Object *obj, struct TermResizeHookMsg *trhm);
 
 static const struct NewMenu newmenus[] =
 {
@@ -171,18 +169,12 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 		return NULL;
 	}
 
-	memset(&tw->OutputHook, 0, sizeof(tw->OutputHook));
-	tw->OutputHook.h_Entry = (HOOKFUNC)term_output_cb;
-	tw->OutputHook.h_Data  = tw;
-
-	memset(&tw->ResizeHook, 0, sizeof(tw->ResizeHook));
-	tw->ResizeHook.h_Entry = (HOOKFUNC)term_resize_cb;
-	tw->ResizeHook.h_Data  = tw;
+	memset(&tw->TermHook, 0, sizeof(tw->TermHook));
+	tw->TermHook.h_Entry = (HOOKFUNC)term_hook_cb;
+	tw->TermHook.h_Data  = tw;
 
 	tw->Term = IIntuition->NewObject(TermClass, NULL,
-		TERM_Screen,     tw->Screen,
-		TERM_OutputHook, &tw->OutputHook,
-		TERM_ResizeHook, &tw->ResizeHook,
+		TERM_UserHook, &tw->TermHook,
 		TAG_END);
 
 	tw->Layout = IIntuition->NewObject(LayoutClass, NULL,
@@ -324,6 +316,37 @@ void termwin_refresh(struct TermWindow *tw)
 ULONG termwin_get_signals(struct TermWindow *tw)
 {
 	return GET(tw->Window, WINDOW_SigMask);
+}
+
+static ULONG term_hook_cb(struct Hook *hook, Object *term, struct TermHookMsg *thm)
+{
+	struct TermWindow *tw = hook->h_Data;
+	int r;
+
+	switch (thm->MethodID)
+	{
+		case THM_OUTPUT:
+			r = shl_ring_push(&tw->RingBuffer, thm->tohm_Data, thm->tohm_Length);
+			if (r < 0)
+			{
+				IExec->DebugPrintF("shl_ring_push: %d\n", r);
+			}
+			break;
+
+		case THM_RESIZE:
+			IExec->Forbid();
+			tw->Columns = thm->trhm_Columns;
+			tw->Rows    = thm->trhm_Rows;
+			tw->NewSize = TRUE;
+			IExec->Permit();
+			break;
+
+		case THM_BELL:
+			IIntuition->DisplayBeep(tw->Screen);
+			break;
+	}
+
+	return 0;
 }
 
 static ULONG term_idcmp_cb(struct Hook *hook, Object *winobj, struct IntuiMessage *imsg)
@@ -496,22 +519,6 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 	return done;
 }
 
-static ULONG term_output_cb(struct Hook *hook, Object *obj, struct TermOutputHookMsg *tohm)
-{
-	struct TermWindow *tw = hook->h_Data;
-	CONST_STRPTR u8 = tohm->tohm_Data;
-	ULONG len = tohm->tohm_Length;
-	int r;
-
-	r = shl_ring_push(&tw->RingBuffer, u8, len);
-	if (r < 0)
-	{
-		IExec->DebugPrintF("shl_ring_push: %d\n", r);
-	}
-
-	return 0;
-}
-
 size_t termwin_poll(struct TermWindow *tw)
 {
 	return tw->RingBuffer.used;
@@ -528,19 +535,6 @@ ssize_t termwin_read(struct TermWindow *tw, char *buffer, size_t len)
 	}
 
 	return n;
-}
-
-static ULONG term_resize_cb(struct Hook *hook, Object *obj, struct TermResizeHookMsg *trhm)
-{
-	struct TermWindow *tw = hook->h_Data;
-
-	IExec->Forbid();
-	tw->Columns = trhm->trhm_Columns;
-	tw->Rows    = trhm->trhm_Rows;
-	tw->NewSize = TRUE;
-	IExec->Permit();
-
-	return 0;
 }
 
 BOOL termwin_poll_new_size(struct TermWindow *tw)

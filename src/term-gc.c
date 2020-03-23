@@ -79,8 +79,7 @@ struct TermData
 	struct RastPort   *td_RPort;
 	ULONG              td_Age;
 
-	struct Hook       *td_OutputHook;
-	struct Hook       *td_ResizeHook;
+	struct Hook       *td_UserHook;
 
 	UWORD              td_MouseMode;
 	UWORD              td_NumClicks;
@@ -260,14 +259,15 @@ static void tsm_write_cb(struct tsm_vte *vte, const char *u8,
 {
 	struct TermData *td = data;
 
-	if (td->td_OutputHook != NULL)
+	if (td->td_UserHook != NULL)
 	{
-		struct TermOutputHookMsg tohm;
+		struct TermHookMsg thm;
 
-		tohm.tohm_Data   = u8;
-		tohm.tohm_Length = len;
+		thm.MethodID    = THM_OUTPUT;
+		thm.tohm_Data   = u8;
+		thm.tohm_Length = len;
 
-		call_hook(td, td->td_OutputHook, &tohm);
+		call_hook(td, td->td_UserHook, &thm);
 	}
 }
 
@@ -275,7 +275,14 @@ static void tsm_bell_cb(struct tsm_vte *vte, void *data)
 {
 	struct TermData *td = data;
 
-	IIntuition->DisplayBeep(td->td_Screen);
+	if (td->td_UserHook != NULL)
+	{
+		struct TermHookMsg thm;
+
+		thm.MethodID = THM_BELL;
+
+		call_hook(td, td->td_UserHook, &thm);
+	}
 }
 
 static ULONG TERM_new(Class *cl, Object *obj, struct opSet *ops)
@@ -379,16 +386,16 @@ static ULONG TERM_get(Class *cl, Object *obj, struct opGet *opg)
 
 	switch (opg->opg_AttrID)
 	{
+		case TERM_UserHook:
+			*opg->opg_Storage = (ULONG)td->td_UserHook;
+			break;
+
 		case TERM_Columns:
 			*opg->opg_Storage = td->td_Columns;
 			break;
 
 		case TERM_Rows:
 			*opg->opg_Storage = td->td_Rows;
-			break;
-
-		case TERM_OutputHook:
-			*opg->opg_Storage = (ULONG)td->td_OutputHook;
 			break;
 
 		case TERM_Font:
@@ -413,10 +420,6 @@ static ULONG TERM_get(Class *cl, Object *obj, struct opGet *opg)
 
 		case TERM_SBTotal:
 			*opg->opg_Storage = td->td_SBTotal;
-			break;
-
-		case TERM_ResizeHook:
-			*opg->opg_Storage = (ULONG)td->td_ResizeHook;
 			break;
 
 		default:
@@ -465,8 +468,8 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 	{
 		switch (tag->ti_Tag)
 		{
-			case TERM_OutputHook:
-				td->td_OutputHook = (struct Hook *)tag->ti_Data;
+			case TERM_UserHook:
+				td->td_UserHook = (struct Hook *)tag->ti_Data;
 				break;
 
 			case TERM_Font:
@@ -541,19 +544,11 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 				}
 				break;
 
-			case TERM_ResizeHook:
-				td->td_ResizeHook = (struct Hook *)tag->ti_Data;
-				break;
-
 			case TERM_BuiltInPalette:
 				if (tsm_vte_set_palette(td->td_VTE, (const char *)tag->ti_Data) == 0)
 				{
 					refresh = TRUE;
 				}
-				break;
-
-			case TERM_Screen:
-				td->td_Screen = (struct Screen *)tag->ti_Data;
 				break;
 		}
 	}
@@ -642,14 +637,15 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 		td->td_Columns = tsm_screen_get_width(td->td_Con);
 		td->td_Rows = tsm_screen_get_height(td->td_Con);
 
-		if (td->td_ResizeHook != NULL)
+		if (td->td_UserHook != NULL)
 		{
-			struct TermResizeHookMsg trhm;
+			struct TermHookMsg thm;
 
-			trhm.trhm_Columns = td->td_Columns;
-			trhm.trhm_Rows    = td->td_Rows;
+			thm.MethodID     = THM_RESIZE;
+			thm.trhm_Columns = td->td_Columns;
+			thm.trhm_Rows    = td->td_Rows;
 
-			call_hook(td, td->td_ResizeHook, &trhm);
+			call_hook(td, td->td_UserHook, &thm);
 		}
 
 		top     = tsm_screen_get_sb_top(td->td_Con);

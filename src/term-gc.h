@@ -26,30 +26,16 @@
 #include <intuition/cghooks.h>
 
 #define TERM_Dummy          (0x80840000)
-#define TERM_Columns        (TERM_Dummy + 1)
-#define TERM_Rows           (TERM_Dummy + 2)
-#define TERM_OutputHook     (TERM_Dummy + 3)
+#define TERM_UserHook       (TERM_Dummy + 1)
+#define TERM_Columns        (TERM_Dummy + 2)
+#define TERM_Rows           (TERM_Dummy + 3)
 #define TERM_Font           (TERM_Dummy + 4)
 #define TERM_MaxScrollback  (TERM_Dummy + 5)
 #define TERM_Scroller       (TERM_Dummy + 6)
 #define TERM_SBTop          (TERM_Dummy + 7)
 #define TERM_SBVisible      (TERM_Dummy + 8)
 #define TERM_SBTotal        (TERM_Dummy + 9)
-#define TERM_ResizeHook     (TERM_Dummy + 10)
-#define TERM_BuiltInPalette (TERM_Dummy + 11)
-#define TERM_Screen         (TERM_Dummy + 12)
-
-struct TermOutputHookMsg
-{
-	CONST_STRPTR tohm_Data;
-	ULONG        tohm_Length;
-};
-
-struct TermResizeHookMsg
-{
-	UWORD trhm_Columns;
-	UWORD trhm_Rows;
-};
+#define TERM_BuiltInPalette (TERM_Dummy + 10)
 
 #define TM_DUMMY           (0x840000)
 #define TM_INPUT           (TM_DUMMY + 1)
@@ -89,6 +75,31 @@ struct tpGeneric
 {
 	ULONG              MethodID;
 	struct GadgetInfo *tpg_GInfo;
+};
+
+#define THM_DUMMY  (0x0)
+#define THM_OUTPUT (THM_DUMMY + 1)
+#define THM_RESIZE (THM_DUMMY + 2)
+#define THM_BELL   (THM_DUMMY + 3)
+
+struct TermHookMsg
+{
+	ULONG MethodID;
+	union
+	{
+		/* THM_OUTPUT */
+		struct
+		{
+			CONST_STRPTR tohm_Data;
+			ULONG        tohm_Length;
+		};
+		/* THM_RESIZE */
+		struct
+		{
+			UWORD        trhm_Columns;
+			UWORD        trhm_Rows;
+		};
+	};
 };
 
 Class *init_term_gc(void);
