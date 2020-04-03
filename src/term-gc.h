@@ -77,10 +77,11 @@ struct tpGeneric
 	struct GadgetInfo *tpg_GInfo;
 };
 
-#define THM_DUMMY  (0x0)
-#define THM_OUTPUT (THM_DUMMY + 1)
-#define THM_RESIZE (THM_DUMMY + 2)
-#define THM_BELL   (THM_DUMMY + 3)
+#define THM_DUMMY       (0x0)
+#define THM_OUTPUT      (THM_DUMMY + 1)
+#define THM_RESIZE      (THM_DUMMY + 2)
+#define THM_BELL        (THM_DUMMY + 3)
+#define THM_WINDOWTITLE (THM_DUMMY + 4)
 
 struct TermHookMsg
 {
@@ -98,6 +99,11 @@ struct TermHookMsg
 		{
 			UWORD        trhm_Columns;
 			UWORD        trhm_Rows;
+		};
+		/* THM_WINDOWTITLE */
+		struct
+		{
+			CONST_STRPTR twthm_Title;
 		};
 	};
 };

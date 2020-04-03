@@ -235,11 +235,14 @@ static ULONG TERM_dispatch(Class *cl, Object *obj, Msg msg)
 	return result;
 }
 
-static ULONG call_hook(struct TermData *td, struct Hook *hook, APTR msg)
+static ULONG call_hook(struct TermData *td, struct TermHookMsg *thm)
 {
-	ULONG result;
+	ULONG result = 0;
 
-	result = IUtility->CallHookPkt(hook, td->td_Object, msg);
+	if (td->td_UserHook != NULL)
+	{
+		result = IUtility->CallHookPkt(td->td_UserHook, td->td_Object, thm);
+	}
 
 	return result;
 }
@@ -258,30 +261,82 @@ static void tsm_write_cb(struct tsm_vte *vte, const char *u8,
                          size_t len, void *data)
 {
 	struct TermData *td = data;
+	struct TermHookMsg thm;
 
-	if (td->td_UserHook != NULL)
-	{
-		struct TermHookMsg thm;
+	thm.MethodID    = THM_OUTPUT;
+	thm.tohm_Data   = u8;
+	thm.tohm_Length = len;
 
-		thm.MethodID    = THM_OUTPUT;
-		thm.tohm_Data   = u8;
-		thm.tohm_Length = len;
-
-		call_hook(td, td->td_UserHook, &thm);
-	}
+	call_hook(td, &thm);
 }
 
 static void tsm_bell_cb(struct tsm_vte *vte, void *data)
 {
 	struct TermData *td = data;
+	struct TermHookMsg thm;
 
-	if (td->td_UserHook != NULL)
+	thm.MethodID = THM_BELL;
+
+	call_hook(td, &thm);
+}
+
+static TEXT map_unicode(const ULONG *maptable, ULONG unicode)
+{
+	TEXT ch = '?';
+
+	if (unicode >= 128)
 	{
-		struct TermHookMsg thm;
+		ULONG i;
 
-		thm.MethodID = THM_BELL;
+		for (i = 128; i < 256; i++)
+		{
+			if (maptable[i] == unicode)
+			{
+				ch = (TEXT)i;
+				break;
+			}
+		}
+	}
+	else
+		ch = (TEXT)unicode;
 
-		call_hook(td, td->td_UserHook, &thm);
+	return ch;
+}
+
+static ULONG convert_from_utf8(STRPTR dst, CONST_STRPTR src, ULONG srclen, const ULONG *maptable)
+{
+	STRPTR d = dst;
+	CONST_STRPTR s = src;
+	CONST_STRPTR srcend = src + srclen;
+	mbstate_t ps;
+	LONG mblen;
+	wchar_t ucs4;
+
+	memset(&ps, 0, sizeof(ps));
+
+	while ((mblen = mbrtowc(&ucs4, s, srcend - s, &ps)) > 0)
+	{
+		*d++ = map_unicode(maptable, ucs4);
+		s += mblen;
+	}
+
+	return d - dst;
+}
+
+static void tsm_osc_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
+{
+	struct TermData *td = data;
+	struct TermHookMsg thm;
+	TEXT buffer[128];
+
+	if (u8[0] == '2' && u8[1] == ';')
+	{
+		convert_from_utf8(buffer, u8 + 2, len - 2, td->td_MapTable);
+
+		thm.MethodID = THM_WINDOWTITLE;
+		thm.twthm_Title = buffer;
+
+		call_hook(td, &thm);
 	}
 }
 
@@ -313,8 +368,6 @@ static ULONG TERM_new(Class *cl, Object *obj, struct opSet *ops)
 			return (ULONG)NULL;
 		}
 
-		tsm_vte_set_bell_cb(td->td_VTE, tsm_bell_cb, td);
-
 		td->td_Columns = tsm_screen_get_width(td->td_Con);
 		td->td_Rows    = tsm_screen_get_height(td->td_Con);
 
@@ -339,6 +392,9 @@ static ULONG TERM_new(Class *cl, Object *obj, struct opSet *ops)
 		td->td_SBTotal   = td->td_Rows;
 
 		TERM_set(cl, obj, ops);
+
+		tsm_vte_set_bell_cb(td->td_VTE, tsm_bell_cb, td);
+		tsm_vte_set_osc_cb(td->td_VTE, tsm_osc_cb, td);
 	}
 
 	return (ULONG)obj;
@@ -625,6 +681,7 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 	if (columns != td->td_Columns || rows != td->td_Rows)
 	{
 		UNUSED int r;
+		struct TermHookMsg thm;
 		ULONG top, visible, total;
 
 		r = tsm_screen_resize(td->td_Con, columns, rows);
@@ -637,16 +694,11 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 		td->td_Columns = tsm_screen_get_width(td->td_Con);
 		td->td_Rows = tsm_screen_get_height(td->td_Con);
 
-		if (td->td_UserHook != NULL)
-		{
-			struct TermHookMsg thm;
+		thm.MethodID     = THM_RESIZE;
+		thm.trhm_Columns = td->td_Columns;
+		thm.trhm_Rows    = td->td_Rows;
 
-			thm.MethodID     = THM_RESIZE;
-			thm.trhm_Columns = td->td_Columns;
-			thm.trhm_Rows    = td->td_Rows;
-
-			call_hook(td, td->td_UserHook, &thm);
-		}
+		call_hook(td, &thm);
 
 		top     = tsm_screen_get_sb_top(td->td_Con);
 		visible = tsm_screen_get_sb_visible(td->td_Con);
@@ -689,29 +741,6 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 	td->td_Layouted = TRUE;
 
 	return 1;
-}
-
-static TEXT map_unicode(const ULONG *maptable, ULONG unicode)
-{
-	TEXT ch = '?';
-
-	if (unicode >= 128)
-	{
-		ULONG i;
-
-		for (i = 128; i < 256; i++)
-		{
-			if (maptable[i] == unicode)
-			{
-				ch = (TEXT)i;
-				break;
-			}
-		}
-	}
-	else
-		ch = (TEXT)unicode;
-
-	return ch;
 }
 
 static int tsm_draw_cb(struct tsm_screen *con, uint64_t id,
@@ -1266,26 +1295,6 @@ static ULONG TERM_handlemouse(Class *cl, Object *obj, struct tpMouse *tpm)
 	}
 
 	return 0;
-}
-
-static ULONG convert_from_utf8(STRPTR dst, CONST_STRPTR src, ULONG srclen, const ULONG *maptable)
-{
-	STRPTR d = dst;
-	CONST_STRPTR s = src;
-	CONST_STRPTR srcend = src + srclen;
-	mbstate_t ps;
-	LONG mblen;
-	wchar_t ucs4;
-
-	memset(&ps, 0, sizeof(ps));
-
-	while ((mblen = mbrtowc(&ucs4, s, srcend - s, &ps)) > 0)
-	{
-		*d++ = map_unicode(maptable, ucs4);
-		s += mblen;
-	}
-
-	return d - dst;
 }
 
 static BOOL write_clip(ULONG unit, CONST_STRPTR utf8, ULONG utf8_len)
