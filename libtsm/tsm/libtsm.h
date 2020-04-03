@@ -255,6 +255,7 @@ void tsm_screen_erase_screen(struct tsm_screen *con, bool protect);
 unsigned int tsm_screen_get_sb_top(struct tsm_screen *con);
 unsigned int tsm_screen_get_sb_visible(struct tsm_screen *con);
 unsigned int tsm_screen_get_sb_total(struct tsm_screen *con);
+bool tsm_screen_blink(struct tsm_screen *con);
 
 void tsm_screen_selection_reset(struct tsm_screen *con);
 void tsm_screen_selection_start(struct tsm_screen *con,

@@ -1710,3 +1710,47 @@ unsigned int tsm_screen_get_sb_total(struct tsm_screen *con)
 	return con->size_y + con->sb_count;
 }
 
+SHL_EXPORT
+bool tsm_screen_blink(struct tsm_screen *con)
+{
+	unsigned int i, j, k;
+	struct line *iter, *line = NULL;
+	struct cell *cell;
+	size_t len;
+	bool res = false;
+
+	iter = con->sb_pos;
+	k = 0;
+
+	for (i = 0; i < con->size_y; ++i) {
+		if (iter) {
+			line = iter;
+			iter = iter->next;
+		} else {
+			line = con->lines[k];
+			k++;
+		}
+
+		for (j = 0; j < con->size_x && j < line->size; ++j) {
+			cell = &line->cells[j];
+
+			if (cell->attr.blink) {
+				tsm_symbol_get(con->sym_table, &cell->ch, &len);
+
+				if (cell->ch == 0 || (cell->ch == ' ' && !cell->attr.underline))
+					len = 0;
+
+				if (len) {
+					if (!res) {
+						screen_inc_age(con);
+						res = true;
+					}
+					cell->age = con->age_cnt;
+				}
+			}
+		}
+	}
+
+	return res;
+}
+
