@@ -23,7 +23,7 @@ PASSWORD is the login password or key file passphrase depending on the
 authentication method used. If this argument is left out a password requester
 will be used instead.
 
-NOSSHAGENT stops filesystem from attempting to connect to ssh-agent.
+NOSSHAGENT stops the program from attempting to connect to ssh-agent.
 
 KEYFILE can be used to change the key file used for public key authentication
 (defaults to "$HOME/.ssh/id_rsa" or "HOME:.ssh/id_rsa").
