@@ -834,7 +834,10 @@ static int tsm_draw_cb(struct tsm_screen *con, uint64_t id,
 			style |= FSF_UNDERLINED;
 		}
 
-		IGraphics->SetSoftStyle(rp, style, FSF_BOLD | FSF_UNDERLINED);
+		style &= IGraphics->AskSoftStyle(rp);
+
+		/* Algorithmic underline is handled manually in code below */
+		IGraphics->SetSoftStyle(rp, style, FSF_BOLD);
 
 		IGraphics->SetRPAttrs(rp,
 			RPTAG_APenColor, f_argb,
@@ -861,6 +864,12 @@ static int tsm_draw_cb(struct tsm_screen *con, uint64_t id,
 			rp->Layer = NULL;
 		}
 		#endif
+
+		if ((style & FSF_UNDERLINED) && (cellh > (td->td_Baseline + 1)))
+		{
+			IGraphics->Move(rp, x, y + td->td_Baseline + 1);
+			IGraphics->Draw(rp, x + cellw - 1, y + td->td_Baseline + 1);
+		}
 	}
 
 	#ifdef OFFSCREEN_BUFFER

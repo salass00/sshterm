@@ -81,3 +81,5 @@ SSHTerm 1.8 (d.m.2020)
 
 - Added blink support (uses a hardcoded 1 second delay for now).
 
+- Fixed the gaps in the underline when rendering non-bold, underlined text.
+
