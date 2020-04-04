@@ -27,6 +27,12 @@
 #include <stdarg.h>
 #include <errno.h>
 
+#ifdef __CLIB2__
+typedef ULONG sigmask_t;
+#else
+typedef unsigned int sigmask_t;
+#endif
+
 int socket(int domain, int type, int protocol)
 {
 	return ISocket->socket(domain, type, protocol);
@@ -63,13 +69,8 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 	return ISocket->WaitSelect(nfds, readfds, writefds, exceptfds, timeout, NULL);
 }
 
-#ifdef __CLIB2__
 int waitselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-	struct timeval *timeout, ULONG *signals)
-#else
-int waitselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-	struct timeval *timeout, unsigned int *signals)
-#endif
+	struct timeval *timeout, sigmask_t *signals)
 {
 	return ISocket->WaitSelect(nfds, readfds, writefds, exceptfds, timeout, (ULONG *)signals);
 }

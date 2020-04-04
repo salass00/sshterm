@@ -510,11 +510,7 @@ int sshterm(int argc, char **argv)
 
 		signals = termwin_get_signals(termwin) | timer_signal(blink_timer);
 
-		#ifdef __CLIB2__
-		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, &signals);
-		#else
-		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, (unsigned int *)&signals);
-		#endif
+		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, (sigmask_t *)&signals);
 		if (rc < 0)
 		{
 			if (errno != EINTR)

@@ -41,6 +41,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __CLIB2__
+typedef ULONG sigmask_t;
+#else
+typedef unsigned int sigmask_t;
+#endif
+
 extern Class *MenuClass;
 extern Class *WindowClass;
 extern Class *LabelClass;
