@@ -551,3 +551,13 @@ void termwin_get_size(struct TermWindow *tw, UWORD *columns, UWORD *rows)
 	IExec->Permit();
 }
 
+void termwin_blink(struct TermWindow *tw)
+{
+	struct tpGeneric tpg;
+
+	tpg.MethodID  = TM_BLINK;
+	tpg.tpg_GInfo = NULL;
+
+	DGM(tw->Term, tw->Window, (Msg)&tpg);
+}
+

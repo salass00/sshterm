@@ -22,7 +22,7 @@ LIBS    =
 STRIPFLAGS = -R.comment --strip-unneeded-rel-relocs
 
 SRCS = start.c main.c termwin.c menus.c about.c signal-pid.c term-gc.c \
-       bsdsocket-stubs.c amissl-stubs.c zlib-stubs.c malloc.c
+       bsdsocket-stubs.c amissl-stubs.c zlib-stubs.c timer.c malloc.c
 
 OBJS = $(addprefix obj/,$(SRCS:.c=.o))
 
@@ -48,11 +48,12 @@ libtsm/libtsm.a: build-libtsm
 	@true
 
 obj/start.o: src/sshterm.h src/term-gc.h $(TARGET)_rev.h
-obj/main.o: src/sshterm.h $(TARGET)_rev.h
+obj/main.o: src/sshterm.h src/timer.h $(TARGET)_rev.h
 obj/termwin.o: src/sshterm.h src/term-gc.h $(TARGET)_rev.h
 obj/about.o: src/sshterm.h $(TARGET)_rev.h
 obj/signal_pid.o: src/sshterm.h
 obj/term-gc.o: src/sshterm.h src/term-gc.h libtsm/tsm/libtsm.h
+obj/timer.o: src/timer.h
 obj/malloc.o: CFLAGS += -fno-builtin
 
 $(TARGET): $(OBJS) libtsm/libtsm.a $(LIBSSH2DIR)/libssh2.a

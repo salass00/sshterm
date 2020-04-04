@@ -20,6 +20,7 @@
  */
 
 #include "sshterm.h"
+#include "timer.h"
 
 #include <proto/intuition.h>
 #include <classes/requester.h>
@@ -27,6 +28,8 @@
 #include <unistd.h>
 
 #include "SSHTerm_rev.h"
+
+#define BLINK_DELAY 1000 /* 1 second delay */
 
 static const char template[] =
 	"HOSTADDR/A,"
@@ -186,6 +189,7 @@ int sshterm(int argc, char **argv)
 	const char *userauthlist;
 	unsigned int auth_pw;
 	UWORD columns, rows;
+	struct TimeRequest *blink_timer = NULL;
 	BOOL done;
 	ULONG signals;
 	fd_set rfds, wfds;
@@ -481,6 +485,15 @@ int sshterm(int argc, char **argv)
 
 	libssh2_session_set_blocking(ss->session, 0);
 
+	blink_timer = timer_open(UNIT_MICROHZ);
+	if (blink_timer == NULL)
+	{
+		fprintf(stderr, "Failed to open timer.device\n");
+		goto out;
+	}
+
+	timer_start(blink_timer, BLINK_DELAY);
+
 	done = FALSE;
 
 	while (!done)
@@ -495,7 +508,7 @@ int sshterm(int argc, char **argv)
 			FD_SET(ss->socket, &wfds);
 		}
 
-		signals = termwin_get_signals(termwin);
+		signals = termwin_get_signals(termwin) | timer_signal(blink_timer);
 
 		#ifdef __CLIB2__
 		rc = waitselect(ss->socket + 1, &rfds, &wfds, NULL, NULL, &signals);
@@ -511,6 +524,13 @@ int sshterm(int argc, char **argv)
 			}
 
 			done = TRUE;
+		}
+
+		if (signals & timer_signal(blink_timer))
+		{
+			termwin_blink(termwin);
+			timer_end(blink_timer);
+			timer_start(blink_timer, BLINK_DELAY);
 		}
 
 		if (termwin_handle_input(termwin))
@@ -595,6 +615,13 @@ int sshterm(int argc, char **argv)
 	retval = RETURN_OK;
 
 out:
+	if (blink_timer != NULL)
+	{
+		timer_abort(blink_timer);
+		timer_close(blink_timer);
+		blink_timer = NULL;
+	}
+
 	if (ss != NULL)
 	{
 		if (ss->channel != NULL)

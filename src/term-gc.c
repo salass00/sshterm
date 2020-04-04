@@ -76,6 +76,7 @@ struct TermData
 	UWORD              td_Width;
 	UWORD              td_Height;
 	BOOL               td_Layouted:1;
+	BOOL               td_BlinkState:1;
 	struct RastPort   *td_RPort;
 	ULONG              td_Age;
 
@@ -154,6 +155,7 @@ static ULONG TERM_handlemouse(Class *cl, Object *obj, struct tpMouse *tpm);
 static ULONG TERM_copy(Class *cl, Object *obj, struct tpGeneric *tpg);
 static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg);
 static ULONG TERM_clearsb(Class *cl, Object *obj, struct tpGeneric *tpg);
+static ULONG TERM_blink(Class *cl, Object *obj, struct tpGeneric *tpg);
 
 static ULONG TERM_dispatch(Class *cl, Object *obj, Msg msg)
 {
@@ -225,6 +227,10 @@ static ULONG TERM_dispatch(Class *cl, Object *obj, Msg msg)
 
 		case TM_CLEARSB:
 			result = TERM_clearsb(cl, obj, (struct tpGeneric *)msg);
+			break;
+
+		case TM_BLINK:
+			result = TERM_blink(cl, obj, (struct tpGeneric *)msg);
 			break;
 
 		default:
@@ -779,6 +785,9 @@ static int tsm_draw_cb(struct tsm_screen *con, uint64_t id,
 
 	cellw = td->td_CellW;
 	cellh = td->td_CellH;
+
+	if (attr->blink && td->td_BlinkState)
+		len = 0;
 
 	#ifdef OFFSCREEN_BUFFER
 	if (len && td->td_TmpRP.BitMap != NULL)
@@ -1692,6 +1701,23 @@ static ULONG TERM_clearsb(Class *cl, Object *obj, struct tpGeneric *tpg)
 				TAG_END);
 		}
 
+		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
+	}
+
+	return TRUE;
+}
+
+static ULONG TERM_blink(Class *cl, Object *obj, struct tpGeneric *tpg)
+{
+	struct TermData *td = INST_DATA(cl, obj);
+	bool r;
+
+	td->td_BlinkState ^= 1;
+
+	r = tsm_screen_blink(td->td_Con);
+
+	if (r && tpg->tpg_GInfo != NULL)
+	{
 		IIntuition->DoRender(obj, tpg->tpg_GInfo, GREDRAW_UPDATE);
 	}
 

@@ -45,6 +45,7 @@
 #define TM_PASTE           (TM_DUMMY + 5)
 #define TM_CLEARSB         (TM_DUMMY + 6)
 #define TM_COPYALL         (TM_DUMMY + 7)
+#define TM_BLINK           (TM_DUMMY + 8)
 
 struct tpInput
 {

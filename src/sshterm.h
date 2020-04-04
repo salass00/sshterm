@@ -68,6 +68,7 @@ size_t termwin_poll(struct TermWindow *tw);
 ssize_t termwin_read(struct TermWindow *tw, char *buffer, size_t len);
 BOOL termwin_poll_new_size(struct TermWindow *tw);
 void termwin_get_size(struct TermWindow *tw, UWORD *columns, UWORD *rows);
+void termwin_blink(struct TermWindow *tw);
 
 BOOL aboutwin_open(struct Screen *screen);
 void aboutwin_close(void);
