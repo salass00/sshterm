@@ -19,6 +19,7 @@ cp -p README ${DESTDIR}/SSHTerm
 cp -p releasenotes ${DESTDIR}/SSHTerm
 cp -p COPYING ${DESTDIR}/SSHTerm
 cp -p libtsm/COPYING ${DESTDIR}/SSHTerm/COPYING-libtsm
+cp -p libtsm/LICENSE_htable ${DESTDIR}/SSHTerm/
 cp -p ${LIBSSH2DIR}/COPYING ${DESTDIR}/SSHTerm/COPYING-libssh2
 
 rm -f ${ARCHIVE}
