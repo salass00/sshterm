@@ -749,8 +749,8 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 	return 1;
 }
 
-static int tsm_draw_cb(struct tsm_screen *con, uint64_t id,
-                       const uint32_t *ch, size_t len, unsigned int width,
+static int tsm_draw_cb(struct tsm_screen *con, const uint32_t *ch,
+                       size_t len, unsigned int width,
                        unsigned int posx, unsigned int posy,
                        const struct tsm_screen_attr *attr, tsm_age_t age,
                        void *data)

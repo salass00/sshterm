@@ -175,7 +175,6 @@ struct tsm_screen_attr {
 };
 
 typedef int (*tsm_screen_draw_cb) (struct tsm_screen *con,
-                                   uint64_t id,
                                    const uint32_t *ch,
                                    size_t len,
                                    unsigned int width,
