@@ -66,56 +66,56 @@
 
 /* Input parser states */
 enum parser_state {
-	STATE_NONE,		/* placeholder */
-	STATE_GROUND,		/* initial state and ground */
-	STATE_ESC,		/* ESC sequence was started */
-	STATE_ESC_INT,		/* intermediate escape characters */
-	STATE_CSI_ENTRY,	/* starting CSI sequence */
-	STATE_CSI_PARAM,	/* CSI parameters */
-	STATE_CSI_INT,		/* intermediate CSI characters */
-	STATE_CSI_IGNORE,	/* CSI error; ignore this CSI sequence */
-	STATE_DCS_ENTRY,	/* starting DCS sequence */
-	STATE_DCS_PARAM,	/* DCS parameters */
-	STATE_DCS_INT,		/* intermediate DCS characters */
-	STATE_DCS_PASS,		/* DCS data passthrough */
-	STATE_DCS_IGNORE,	/* DCS error; ignore this DCS sequence */
-	STATE_OSC_STRING,	/* parsing OCS sequence */
-	STATE_ST_IGNORE,	/* unimplemented seq; ignore until ST */
+	STATE_NONE,       /* placeholder */
+	STATE_GROUND,     /* initial state and ground */
+	STATE_ESC,        /* ESC sequence was started */
+	STATE_ESC_INT,    /* intermediate escape characters */
+	STATE_CSI_ENTRY,  /* starting CSI sequence */
+	STATE_CSI_PARAM,  /* CSI parameters */
+	STATE_CSI_INT,    /* intermediate CSI characters */
+	STATE_CSI_IGNORE, /* CSI error; ignore this CSI sequence */
+	STATE_DCS_ENTRY,  /* starting DCS sequence */
+	STATE_DCS_PARAM,  /* DCS parameters */
+	STATE_DCS_INT,    /* intermediate DCS characters */
+	STATE_DCS_PASS,   /* DCS data passthrough */
+	STATE_DCS_IGNORE, /* DCS error; ignore this DCS sequence */
+	STATE_OSC_STRING, /* parsing OCS sequence */
+	STATE_ST_IGNORE,  /* unimplemented seq; ignore until ST */
 	STATE_NUM
 };
 
 /* Input parser actions */
 enum parser_action {
-	ACTION_NONE,		/* placeholder */
-	ACTION_IGNORE,		/* ignore the character entirely */
-	ACTION_PRINT,		/* print the character on the console */
-	ACTION_EXECUTE,		/* execute single control character (C0/C1) */
-	ACTION_CLEAR,		/* clear current parameter state */
-	ACTION_COLLECT,		/* collect intermediate character */
-	ACTION_PARAM,		/* collect parameter character */
-	ACTION_ESC_DISPATCH,	/* dispatch escape sequence */
-	ACTION_CSI_DISPATCH,	/* dispatch csi sequence */
-	ACTION_DCS_START,	/* start of DCS data */
-	ACTION_DCS_COLLECT,	/* collect DCS data */
-	ACTION_DCS_END,		/* end of DCS data */
-	ACTION_OSC_START,	/* start of OSC data */
-	ACTION_OSC_COLLECT,	/* collect OSC data */
-	ACTION_OSC_END,		/* end of OSC data */
+	ACTION_NONE,         /* placeholder */
+	ACTION_IGNORE,       /* ignore the character entirely */
+	ACTION_PRINT,        /* print the character on the console */
+	ACTION_EXECUTE,      /* execute single control character (C0/C1) */
+	ACTION_CLEAR,        /* clear current parameter state */
+	ACTION_COLLECT,      /* collect intermediate character */
+	ACTION_PARAM,        /* collect parameter character */
+	ACTION_ESC_DISPATCH, /* dispatch escape sequence */
+	ACTION_CSI_DISPATCH, /* dispatch csi sequence */
+	ACTION_DCS_START,    /* start of DCS data */
+	ACTION_DCS_COLLECT,  /* collect DCS data */
+	ACTION_DCS_END,      /* end of DCS data */
+	ACTION_OSC_START,    /* start of OSC data */
+	ACTION_OSC_COLLECT,  /* collect OSC data */
+	ACTION_OSC_END,      /* end of OSC data */
 	ACTION_NUM
 };
 
 /* CSI flags */
-#define CSI_BANG	0x0001		/* CSI: ! */
-#define CSI_CASH	0x0002		/* CSI: $ */
-#define CSI_WHAT	0x0004		/* CSI: ? */
-#define CSI_GT		0x0008		/* CSI: > */
-#define CSI_SPACE	0x0010		/* CSI:   */
-#define CSI_SQUOTE	0x0020		/* CSI: ' */
-#define CSI_DQUOTE	0x0040		/* CSI: " */
-#define CSI_MULT	0x0080		/* CSI: * */
-#define CSI_PLUS	0x0100		/* CSI: + */
-#define CSI_POPEN	0x0200		/* CSI: ( */
-#define CSI_PCLOSE	0x0400		/* CSI: ) */
+#define CSI_BANG	0x0001 /* CSI: ! */
+#define CSI_CASH	0x0002 /* CSI: $ */
+#define CSI_WHAT	0x0004 /* CSI: ? */
+#define CSI_GT		0x0008 /* CSI: > */
+#define CSI_SPACE	0x0010 /* CSI:   */
+#define CSI_SQUOTE	0x0020 /* CSI: ' */
+#define CSI_DQUOTE	0x0040 /* CSI: " */
+#define CSI_MULT	0x0080 /* CSI: * */
+#define CSI_PLUS	0x0100 /* CSI: + */
+#define CSI_POPEN	0x0200 /* CSI: ( */
+#define CSI_PCLOSE	0x0400 /* CSI: ) */
 
 /* max CSI arguments */
 #define CSI_ARG_MAX 16
@@ -124,24 +124,24 @@ enum parser_action {
 #define OSC_MAX_LEN 128
 
 /* terminal flags */
-#define FLAG_CURSOR_KEY_MODE			0x00000001 /* DEC cursor key mode */
-#define FLAG_KEYPAD_APPLICATION_MODE		0x00000002 /* DEC keypad application mode; TODO: toggle on numlock? */
-#define FLAG_LINE_FEED_NEW_LINE_MODE		0x00000004 /* DEC line-feed/new-line mode */
-#define FLAG_8BIT_MODE				0x00000008 /* Disable UTF-8 mode and enable 8bit compatible mode */
-#define FLAG_7BIT_MODE				0x00000010 /* Disable 8bit mode and use 7bit compatible mode */
-#define FLAG_USE_C1				0x00000020 /* Explicitly use 8bit C1 codes; TODO: implement */
-#define FLAG_KEYBOARD_ACTION_MODE		0x00000040 /* Disable keyboard; TODO: implement? */
-#define FLAG_INSERT_REPLACE_MODE		0x00000080 /* Enable insert mode */
-#define FLAG_SEND_RECEIVE_MODE			0x00000100 /* Disable local echo */
-#define FLAG_TEXT_CURSOR_MODE			0x00000200 /* Show cursor */
-#define FLAG_INVERSE_SCREEN_MODE		0x00000400 /* Inverse colors */
-#define FLAG_ORIGIN_MODE			0x00000800 /* Relative origin for cursor */
-#define FLAG_AUTO_WRAP_MODE			0x00001000 /* Auto line wrap mode */
-#define FLAG_AUTO_REPEAT_MODE			0x00002000 /* Auto repeat key press; TODO: implement */
-#define FLAG_NATIONAL_CHARSET_MODE		0x00004000 /* Send keys from nation charsets; TODO: implement */
-#define FLAG_BACKGROUND_COLOR_ERASE_MODE	0x00008000 /* Set background color on erase (bce) */
-#define FLAG_PREPEND_ESCAPE			0x00010000 /* Prepend escape character to next output */
-#define FLAG_TITE_INHIBIT_MODE			0x00020000 /* Prevent switching to alternate screen buffer */
+#define FLAG_CURSOR_KEY_MODE             0x00000001 /* DEC cursor key mode */
+#define FLAG_KEYPAD_APPLICATION_MODE     0x00000002 /* DEC keypad application mode; TODO: toggle on numlock? */
+#define FLAG_LINE_FEED_NEW_LINE_MODE     0x00000004 /* DEC line-feed/new-line mode */
+#define FLAG_8BIT_MODE                   0x00000008 /* Disable UTF-8 mode and enable 8bit compatible mode */
+#define FLAG_7BIT_MODE                   0x00000010 /* Disable 8bit mode and use 7bit compatible mode */
+#define FLAG_USE_C1                      0x00000020 /* Explicitly use 8bit C1 codes; TODO: implement */
+#define FLAG_KEYBOARD_ACTION_MODE        0x00000040 /* Disable keyboard; TODO: implement? */
+#define FLAG_INSERT_REPLACE_MODE         0x00000080 /* Enable insert mode */
+#define FLAG_SEND_RECEIVE_MODE           0x00000100 /* Disable local echo */
+#define FLAG_TEXT_CURSOR_MODE            0x00000200 /* Show cursor */
+#define FLAG_INVERSE_SCREEN_MODE         0x00000400 /* Inverse colors */
+#define FLAG_ORIGIN_MODE                 0x00000800 /* Relative origin for cursor */
+#define FLAG_AUTO_WRAP_MODE              0x00001000 /* Auto line wrap mode */
+#define FLAG_AUTO_REPEAT_MODE            0x00002000 /* Auto repeat key press; TODO: implement */
+#define FLAG_NATIONAL_CHARSET_MODE       0x00004000 /* Send keys from nation charsets; TODO: implement */
+#define FLAG_BACKGROUND_COLOR_ERASE_MODE 0x00008000 /* Set background color on erase (bce) */
+#define FLAG_PREPEND_ESCAPE              0x00010000 /* Prepend escape character to next output */
+#define FLAG_TITE_INHIBIT_MODE           0x00020000 /* Prevent switching to alternate screen buffer */
 
 struct vte_saved_state {
 	unsigned int cursor_x;
@@ -408,7 +408,7 @@ static void to_rgb(struct tsm_vte *vte, struct tsm_screen_attr *attr)
 }
 
 static void copy_fcolor(struct tsm_screen_attr *dest,
-			const struct tsm_screen_attr *src)
+                        const struct tsm_screen_attr *src)
 {
 	dest->fccode = src->fccode;
 	dest->fr = src->fr;
@@ -417,7 +417,7 @@ static void copy_fcolor(struct tsm_screen_attr *dest,
 }
 
 static void copy_bcolor(struct tsm_screen_attr *dest,
-			const struct tsm_screen_attr *src)
+                        const struct tsm_screen_attr *src)
 {
 	dest->bccode = src->bccode;
 	dest->br = src->br;
@@ -427,8 +427,8 @@ static void copy_bcolor(struct tsm_screen_attr *dest,
 
 SHL_EXPORT
 int tsm_vte_new(struct tsm_vte **out, struct tsm_screen *con,
-		tsm_vte_write_cb write_cb, void *data,
-		tsm_log_t log, void *log_data)
+                tsm_vte_write_cb write_cb, void *data,
+                tsm_log_t log, void *log_data)
 {
 	struct tsm_vte *vte;
 	int ret;
@@ -640,7 +640,7 @@ void tsm_vte_get_def_attr(struct tsm_vte *vte, struct tsm_screen_attr *out)
  * ignore this.
  */
 static void vte_write_debug(struct tsm_vte *vte, const char *u8, size_t len,
-			    bool raw, const char *file, int line)
+                            bool raw, const char *file, int line)
 {
 #ifdef BUILD_ENABLE_DEBUG
 	/* in debug mode we check that escape sequences are always <0x7f so they
@@ -2428,8 +2428,8 @@ void tsm_vte_input(struct tsm_vte *vte, const char *u8, size_t len)
 #ifndef __amigaos4__
 SHL_EXPORT
 bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
-			     uint32_t ascii, unsigned int mods,
-			     uint32_t unicode)
+                             uint32_t ascii, unsigned int mods,
+                             uint32_t unicode)
 {
 	char val, u8[4];
 	size_t len;
@@ -3005,7 +3005,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 #ifdef __amigaos4__
 SHL_EXPORT
 bool tsm_vte_handle_keyboard_amiga(struct tsm_vte *vte, uint16_t code,
-			     uint16_t qualifier, uint32_t unicode)
+                                   uint16_t qualifier, uint32_t unicode)
 {
 	char val, u8[4];
 	size_t len;

@@ -119,7 +119,7 @@ void screen_cell_init(struct tsm_screen *con, struct cell *cell)
 }
 
 static int line_new(struct tsm_screen *con, struct line **out,
-		    unsigned int width)
+                    unsigned int width)
 {
 	struct line *line;
 	unsigned int i;
@@ -373,8 +373,8 @@ static void screen_scroll_down(struct tsm_screen *con, unsigned int num)
 }
 
 static void screen_write(struct tsm_screen *con, unsigned int x,
-			  unsigned int y, tsm_symbol_t ch, unsigned int len,
-			  const struct tsm_screen_attr *attr)
+                         unsigned int y, tsm_symbol_t ch, unsigned int len,
+                         const struct tsm_screen_attr *attr)
 {
 	struct line *line;
 	unsigned int i;
@@ -593,7 +593,7 @@ static bool line_is_empty(const struct tsm_screen *con, const struct line *line)
 
 SHL_EXPORT
 int tsm_screen_resize(struct tsm_screen *con, unsigned int x,
-		      unsigned int y)
+                      unsigned int y)
 {
 	struct line **cache;
 	unsigned int i, j, width, diff, start;
@@ -792,7 +792,7 @@ int tsm_screen_resize(struct tsm_screen *con, unsigned int x,
 
 SHL_EXPORT
 int tsm_screen_set_margins(struct tsm_screen *con,
-			       unsigned int top, unsigned int bottom)
+                           unsigned int top, unsigned int bottom)
 {
 	unsigned int upper, lower;
 
@@ -821,7 +821,7 @@ int tsm_screen_set_margins(struct tsm_screen *con,
 /* set maximum scrollback buffer size */
 SHL_EXPORT
 void tsm_screen_set_max_sb(struct tsm_screen *con,
-			       unsigned int max)
+                           unsigned int max)
 {
 	struct line *line;
 
@@ -975,7 +975,7 @@ void tsm_screen_sb_reset(struct tsm_screen *con)
 
 SHL_EXPORT
 void tsm_screen_set_def_attr(struct tsm_screen *con,
-				 const struct tsm_screen_attr *attr)
+                             const struct tsm_screen_attr *attr)
 {
 	if (!con || !attr)
 		return;
@@ -1124,7 +1124,7 @@ void tsm_screen_reset_all_tabstops(struct tsm_screen *con)
 
 SHL_EXPORT
 void tsm_screen_write(struct tsm_screen *con, tsm_symbol_t ch,
-			  const struct tsm_screen_attr *attr)
+                      const struct tsm_screen_attr *attr)
 {
 	unsigned int last, len;
 
@@ -1195,7 +1195,7 @@ void tsm_screen_scroll_down(struct tsm_screen *con, unsigned int num)
 
 SHL_EXPORT
 void tsm_screen_move_to(struct tsm_screen *con, unsigned int x,
-			    unsigned int y)
+                        unsigned int y)
 {
 	unsigned int last;
 
@@ -1222,7 +1222,7 @@ void tsm_screen_move_to(struct tsm_screen *con, unsigned int x,
 
 SHL_EXPORT
 void tsm_screen_move_up(struct tsm_screen *con, unsigned int num,
-			    bool scroll)
+                        bool scroll)
 {
 	unsigned int diff, size;
 
@@ -1580,7 +1580,7 @@ void tsm_screen_erase_chars(struct tsm_screen *con, unsigned int num)
 
 SHL_EXPORT
 void tsm_screen_erase_cursor_to_end(struct tsm_screen *con,
-				        bool protect)
+                                    bool protect)
 {
 	unsigned int x;
 

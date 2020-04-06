@@ -212,7 +212,7 @@ tsm_symbol_t tsm_symbol_make(uint32_t ucs4)
  * is returned. If \size is NULL, then the size value is omitted.
  */
 const uint32_t *tsm_symbol_get(struct tsm_symbol_table *tbl,
-			       tsm_symbol_t *sym, size_t *size)
+                               tsm_symbol_t *sym, size_t *size)
 {
 	uint32_t *ucs4, idx;
 
@@ -270,7 +270,7 @@ tsm_symbol_t tsm_symbol_append(struct tsm_symbol_table *tbl,
 	buf[s++] = TSM_UCS4_MAX + 1;
 
 	res = shl_htable_lookup(&tbl->symbols, buf, hash_ucs4(buf, NULL),
-				(void**)&nval);
+                            (void**)&nval);
 	if (res) {
 		/* key is prefixed with actual value */
 		return *--nval;
@@ -313,7 +313,7 @@ err_id:
 }
 
 unsigned int tsm_symbol_get_width(struct tsm_symbol_table *tbl,
-				  tsm_symbol_t sym)
+                                  tsm_symbol_t sym)
 {
 	const uint32_t *ch;
 	size_t len;

@@ -43,7 +43,7 @@
 
 SHL_EXPORT
 tsm_age_t tsm_screen_draw(struct tsm_screen *con, tsm_screen_draw_cb draw_cb,
-			  void *data)
+                          void *data)
 {
 	unsigned int cur_x, cur_y;
 	unsigned int i, j, k;
