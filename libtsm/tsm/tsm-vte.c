@@ -153,28 +153,6 @@ struct vte_saved_state {
 	bool origin_mode;
 };
 
-enum vte_color {
-	COLOR_BLACK,
-	COLOR_RED,
-	COLOR_GREEN,
-	COLOR_YELLOW,
-	COLOR_BLUE,
-	COLOR_MAGENTA,
-	COLOR_CYAN,
-	COLOR_LIGHT_GREY,
-	COLOR_DARK_GREY,
-	COLOR_LIGHT_RED,
-	COLOR_LIGHT_GREEN,
-	COLOR_LIGHT_YELLOW,
-	COLOR_LIGHT_BLUE,
-	COLOR_LIGHT_MAGENTA,
-	COLOR_LIGHT_CYAN,
-	COLOR_WHITE,
-	COLOR_FOREGROUND,
-	COLOR_BACKGROUND,
-	COLOR_NUM
-};
-
 struct tsm_vte {
 	unsigned long ref;
 	tsm_log_t llog;
@@ -199,7 +177,7 @@ struct tsm_vte {
 	unsigned int osc_len;
 	char osc_arg[OSC_MAX_LEN];
 
-	uint8_t palette[COLOR_NUM][3];
+	uint8_t palette[TSM_COLOR_NUM][3];
 	struct tsm_screen_attr def_attr;
 	struct tsm_screen_attr cattr;
 	unsigned int flags;
@@ -543,8 +521,8 @@ static int vte_update_palette(struct tsm_vte *vte)
 	struct line *line;
 	unsigned int i, j;
 
-	vte->def_attr.fccode = COLOR_FOREGROUND;
-	vte->def_attr.bccode = COLOR_BACKGROUND;
+	vte->def_attr.fccode = TSM_COLOR_FOREGROUND;
+	vte->def_attr.bccode = TSM_COLOR_BACKGROUND;
 
 	to_rgb(vte, &vte->def_attr);
 	memcpy(&vte->cattr, &vte->def_attr, sizeof(vte->cattr));
@@ -3022,7 +3000,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 	vte->flags &= ~FLAG_PREPEND_ESCAPE;
 	return false;
 }
-#endif
+#endif /* !__amigaos4__*/
 
 #ifdef __amigaos4__
 SHL_EXPORT
@@ -3439,5 +3417,5 @@ bool tsm_vte_handle_keyboard_amiga(struct tsm_vte *vte, uint16_t code,
 	vte->flags &= ~FLAG_PREPEND_ESCAPE;
 	return false;
 }
-#endif
+#endif /* __amigaos4__ */
 
