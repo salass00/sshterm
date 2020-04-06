@@ -11,6 +11,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include "wcwidth.h"
 
 struct width_interval {
         int start;
