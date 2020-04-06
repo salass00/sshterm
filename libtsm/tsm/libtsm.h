@@ -426,6 +426,7 @@ void tsm_vte_get_def_attr(struct tsm_vte *vte, struct tsm_screen_attr *out);
 void tsm_vte_reset(struct tsm_vte *vte);
 void tsm_vte_hard_reset(struct tsm_vte *vte);
 void tsm_vte_input(struct tsm_vte *vte, const char *u8, size_t len);
+
 #ifdef __amigaos4__
 bool tsm_vte_handle_keyboard_amiga(struct tsm_vte *vte, uint16_t code,
                                    uint16_t qualifier, uint32_t unicode);
