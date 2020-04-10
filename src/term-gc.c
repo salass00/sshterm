@@ -1693,7 +1693,7 @@ static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg)
 		if (state >= TSM_UTF8_EXPECT1)
 		{
 			ucs4 = tsm_utf8_mach_get(&mach);
-				code = (ucs4 == '\n') ? RAWKEY_RETURN : 0;
+			code = (ucs4 == '\n') ? RAWKEY_RETURN : 0;
 
 			tsm_vte_handle_keyboard_amiga(td->td_VTE, code, 0, ucs4);
 		}
