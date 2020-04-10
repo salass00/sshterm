@@ -446,11 +446,8 @@ char *tsm_ucs4_to_utf8_alloc(const uint32_t *ucs4, size_t len, size_t *len_out)
  * "struct tsm_utf8_mach" object. It has no global state and all functions are
  * re-entrant if called with different state-machine objects.
  *
- * tsm_utf8_mach_new(): This creates a new state-machine and resets it to its
- * initial state. Returns 0 on success.
- *
- * tsm_uft8_mach_free(): This destroys a state-machine and frees all internally
- * allocated memory.
+ * tsm_utf8_mach_init(): This initializes a new state-machine and sets it to its
+ * initial state.
  *
  * tsm_utf8_mach_reset(): Reset a given state-machine to its initial state. This
  * is the same state the machine is in after it got created.
@@ -487,35 +484,13 @@ char *tsm_ucs4_to_utf8_alloc(const uint32_t *ucs4, size_t len, size_t *len_out)
  * so we avoid any non-ASCII+non-UTF8 input to prevent this.
  */
 
-struct tsm_utf8_mach {
-	int state;
-	uint32_t ch;
-};
-
-int tsm_utf8_mach_new(struct tsm_utf8_mach **out)
-{
-	struct tsm_utf8_mach *mach;
-
-	if (!out)
-		return -EINVAL;
-
-	mach = malloc(sizeof(*mach));
-	if (!mach)
-		return -ENOMEM;
-
-	memset(mach, 0, sizeof(*mach));
-	mach->state = TSM_UTF8_START;
-
-	*out = mach;
-	return 0;
-}
-
-void tsm_utf8_mach_free(struct tsm_utf8_mach *mach)
+void tsm_utf8_mach_init(struct tsm_utf8_mach *mach)
 {
 	if (!mach)
 		return;
 
-	free(mach);
+	memset(mach, 0, sizeof(*mach));
+	mach->state = TSM_UTF8_START;
 }
 
 int tsm_utf8_mach_feed(struct tsm_utf8_mach *mach, char ci)
