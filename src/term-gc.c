@@ -31,6 +31,7 @@
 #include <gadgets/scroller.h>
 
 #include <libtsm.h>
+#include <libtsm-int.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <stdarg.h>
@@ -311,22 +312,30 @@ static TEXT map_unicode(const ULONG *maptable, ULONG unicode)
 
 static ULONG convert_from_utf8(STRPTR dst, CONST_STRPTR src, ULONG srclen, const ULONG *maptable)
 {
-	STRPTR d = dst;
-	CONST_STRPTR s = src;
-	CONST_STRPTR srcend = src + srclen;
-	mbstate_t ps;
-	LONG mblen;
+	struct tsm_utf8_mach mach;
+	ULONG i, j;
+	int state = TSM_UTF8_START;
 	wchar_t ucs4;
 
-	memset(&ps, 0, sizeof(ps));
+	tsm_utf8_mach_init(&mach);
 
-	while ((mblen = mbrtowc(&ucs4, s, srcend - s, &ps)) > 0)
+	for (i = j = 0; i < srclen; i++)
 	{
-		*d++ = map_unicode(maptable, ucs4);
-		s += mblen;
+		state = tsm_utf8_mach_feed(&mach, src[i]);
+		if (state == TSM_UTF8_ACCEPT || state == TSM_UTF8_REJECT)
+		{
+			ucs4 = tsm_utf8_mach_get(&mach);
+			dst[j++] = map_unicode(maptable, ucs4);
+		}
 	}
 
-	return d - dst;
+	if (state >= TSM_UTF8_EXPECT1)
+	{
+		ucs4 = tsm_utf8_mach_get(&mach);
+		dst[j++] = map_unicode(maptable, ucs4);
+	}
+
+	return j;
 }
 
 static void tsm_osc_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
@@ -1661,21 +1670,32 @@ static ULONG TERM_paste(Class *cl, Object *obj, struct tpGeneric *tpg)
 	result = read_clip(PRIMARY_CLIP, &utf8, &utf8_len);
 	if (result)
 	{
-		CONST_STRPTR u8 = utf8;
-		CONST_STRPTR u8end = utf8 + utf8_len;
-		mbstate_t ps;
-		LONG mblen;
+		struct tsm_utf8_mach mach;
+		ULONG i;
+		int state = TSM_UTF8_START;
 		wchar_t ucs4;
+		UWORD code;
 
-		memset(&ps, 0, sizeof(ps));
+		tsm_utf8_mach_init(&mach);
 
-		while ((mblen = mbrtowc(&ucs4, u8, u8end - u8, &ps)) > 0)
+		for (i = 0; i < utf8_len; i++)
 		{
-			UWORD code = (ucs4 == '\n') ? RAWKEY_RETURN : 0;
+			state = tsm_utf8_mach_feed(&mach, utf8[i]);
+			if (state == TSM_UTF8_ACCEPT || state == TSM_UTF8_REJECT)
+			{
+				ucs4 = tsm_utf8_mach_get(&mach);
+				code = (ucs4 == '\n') ? RAWKEY_RETURN : 0;
+
+				tsm_vte_handle_keyboard_amiga(td->td_VTE, code, 0, ucs4);
+			}
+		}
+
+		if (state >= TSM_UTF8_EXPECT1)
+		{
+			ucs4 = tsm_utf8_mach_get(&mach);
+				code = (ucs4 == '\n') ? RAWKEY_RETURN : 0;
 
 			tsm_vte_handle_keyboard_amiga(td->td_VTE, code, 0, ucs4);
-
-			u8 += mblen;
 		}
 
 		free(utf8);

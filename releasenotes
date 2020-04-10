@@ -83,3 +83,6 @@ SSHTerm 1.8 (d.m.2020)
 
 - Fixed the gaps in the underline when rendering non-bold, underlined text.
 
+- Replaced mbrtowc() for parsing UTF-8 with the tsm_utf8_mach parser from
+  libtsm.
+
