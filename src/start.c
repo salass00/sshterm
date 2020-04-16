@@ -40,6 +40,7 @@ struct UtilityIFace        *IUtility;
 struct DiskfontIFace       *IDiskfont;
 struct GraphicsIFace       *IGraphics;
 struct IntuitionIFace      *IIntuition;
+struct AslIFace            *IAsl;
 struct KeymapIFace         *IKeymap;
 struct LayersIFace         *ILayers;
 struct IconIFace           *IIcon;
@@ -106,6 +107,12 @@ int main(int argc, char **argv)
 
 		IIntuition = (struct IntuitionIFace *)open_interface("intuition.library", 53);
 		if (IIntuition == NULL)
+		{
+			break;
+		}
+
+		IAsl = (struct AslIFace *)open_interface("asl.library", 53);
+		if (IAsl == NULL)
 		{
 			break;
 		}
@@ -367,6 +374,12 @@ int main(int argc, char **argv)
 	{
 		close_interface((struct Interface *)IKeymap);
 		IKeymap = NULL;
+	}
+
+	if (IAsl != NULL)
+	{
+		close_interface((struct Interface *)IAsl);
+		IAsl = NULL;
 	}
 
 	if (IIntuition != NULL)

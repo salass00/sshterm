@@ -37,6 +37,7 @@ struct TermWindow {
 	APTR                   VisualInfo;
 	APTR                   MenuStrip;
 	struct MsgPort        *AppPort;
+	struct TextFont       *Font;
 	Object                *Window;
 	Object                *Layout;
 	Object                *Term;
@@ -59,14 +60,16 @@ enum {
 	MID_EDIT_COPY,
 	MID_EDIT_COPYALL,
 	MID_EDIT_PASTE,
-	MID_PALETTE_MENU,
-	MID_PALETTE_DEFAULT,
-	MID_PALETTE_SOLARIZED,
-	MID_PALETTE_SOLARIZED_BLACK,
-	MID_PALETTE_SOLARIZED_WHITE,
-	MID_PALETTE_SOFT_BLACK,
-	MID_PALETTE_BASE16_DARK,
-	MID_PALETTE_BASE16_LIGHT
+	MID_SETTINGS_MENU,
+	MID_SETTINGS_PALETTE,
+	MID_SETTINGS_PALETTE_DEFAULT,
+	MID_SETTINGS_PALETTE_SOLARIZED,
+	MID_SETTINGS_PALETTE_SOLARIZED_BLACK,
+	MID_SETTINGS_PALETTE_SOLARIZED_WHITE,
+	MID_SETTINGS_PALETTE_SOFT_BLACK,
+	MID_SETTINGS_PALETTE_BASE16_DARK,
+	MID_SETTINGS_PALETTE_BASE16_LIGHT,
+	MID_SETTINGS_SELECTFONT
 };
 
 static inline ULONG GET(Object *obj, ULONG attr)
@@ -92,26 +95,28 @@ static ULONG term_idcmp_cb(struct Hook *hook, Object *winobj, struct IntuiMessag
 
 static const struct NewMenu newmenus[] =
 {
-	{ NM_TITLE, "Project", NULL, 0, 0, (APTR)MID_PROJECT_MENU },
-	{ NM_ITEM, "Iconify", "I", 0, 0, (APTR)MID_PROJECT_ICONIFY },
-	{ NM_ITEM, "About...", "?", 0, 0, (APTR)MID_PROJECT_ABOUT },
-	{ NM_ITEM, NM_BARLABEL, NULL, 0, 0, NULL },
-	{ NM_ITEM, "Clear Scrollback", NULL, 0, 0, (APTR)MID_PROJECT_CLEARSB },
-	{ NM_ITEM, NM_BARLABEL, NULL, 0, 0, NULL },
-	{ NM_ITEM, "Close", "K", 0, 0, (APTR)MID_PROJECT_CLOSE },
-	{ NM_TITLE, "Edit", NULL, 0, 0, (APTR)MID_EDIT_MENU },
-	{ NM_ITEM, "Copy", "C", 0, 0, (APTR)MID_EDIT_COPY },
-	{ NM_ITEM, "Copy All", NULL, 0, 0, (APTR)MID_EDIT_COPYALL },
-	{ NM_ITEM, "Paste", "V", 0, 0, (APTR)MID_EDIT_PASTE },
-	{ NM_TITLE, "Palette", NULL, 0, 0, (APTR)MID_PALETTE_MENU },
-	{ NM_ITEM, "Default", NULL, CHECKIT | CHECKED, ~1, (APTR)MID_PALETTE_DEFAULT },
-	{ NM_ITEM, "Solarized", NULL, CHECKIT, ~2, (APTR)MID_PALETTE_SOLARIZED },
-	{ NM_ITEM, "Solarized Black", NULL, CHECKIT, ~4, (APTR)MID_PALETTE_SOLARIZED_BLACK },
-	{ NM_ITEM, "Solarized White", NULL, CHECKIT, ~8, (APTR)MID_PALETTE_SOLARIZED_WHITE },
-	{ NM_ITEM, "Soft Black", NULL, CHECKIT, ~16, (APTR)MID_PALETTE_SOFT_BLACK },
-	{ NM_ITEM, "Base16 Dark", NULL, CHECKIT, ~32, (APTR)MID_PALETTE_BASE16_DARK },
-	{ NM_ITEM, "Base16 Light", NULL, CHECKIT, ~64, (APTR)MID_PALETTE_BASE16_LIGHT },
-	{ NM_END, NULL, NULL, 0, 0, NULL }
+	{ NM_TITLE, "Project",          NULL, 0,               0,   (APTR)MID_PROJECT_MENU                     },
+	{ NM_ITEM,  "Iconify",          "I",  0,               0,   (APTR)MID_PROJECT_ICONIFY                  },
+	{ NM_ITEM,  "About...",         "?",  0,               0,   (APTR)MID_PROJECT_ABOUT                    },
+	{ NM_ITEM,  NM_BARLABEL,        NULL, 0,               0,   NULL                                       },
+	{ NM_ITEM,  "Clear Scrollback", NULL, 0,               0,   (APTR)MID_PROJECT_CLEARSB                  },
+	{ NM_ITEM,  NM_BARLABEL,        NULL, 0,               0,   NULL                                       },
+	{ NM_ITEM,  "Close",            "K",  0,               0,   (APTR)MID_PROJECT_CLOSE                    },
+	{ NM_TITLE, "Edit",             NULL, 0,               0,   (APTR)MID_EDIT_MENU                        },
+	{ NM_ITEM,  "Copy",             "C",  0,               0,   (APTR)MID_EDIT_COPY                        },
+	{ NM_ITEM,  "Copy All",         NULL, 0,               0,   (APTR)MID_EDIT_COPYALL                     },
+	{ NM_ITEM,  "Paste",            "V",  0,               0,   (APTR)MID_EDIT_PASTE                       },
+	{ NM_TITLE, "Settings",         NULL, 0,               0,   (APTR)MID_SETTINGS_MENU                    },
+	{ NM_ITEM,  "Palette",          NULL, 0,               0,   (APTR)MID_SETTINGS_PALETTE                 },
+	{ NM_SUB,   "Default",          NULL, CHECKIT|CHECKED, ~1,  (APTR)MID_SETTINGS_PALETTE_DEFAULT         },
+	{ NM_SUB,   "Solarized",        NULL, CHECKIT,         ~2,  (APTR)MID_SETTINGS_PALETTE_SOLARIZED       },
+	{ NM_SUB,   "Solarized Black",  NULL, CHECKIT,         ~4,  (APTR)MID_SETTINGS_PALETTE_SOLARIZED_BLACK },
+	{ NM_SUB,   "Solarized White",  NULL, CHECKIT,         ~8,  (APTR)MID_SETTINGS_PALETTE_SOLARIZED_WHITE },
+	{ NM_SUB,   "Soft Black",       NULL, CHECKIT,         ~16, (APTR)MID_SETTINGS_PALETTE_SOFT_BLACK      },
+	{ NM_SUB,   "Base16 Dark",      NULL, CHECKIT,         ~32, (APTR)MID_SETTINGS_PALETTE_BASE16_DARK     },
+	{ NM_SUB,   "Base16 Light",     NULL, CHECKIT,         ~64, (APTR)MID_SETTINGS_PALETTE_BASE16_LIGHT    },
+	{ NM_ITEM,  "Select Font...",   NULL, 0,               0,   (APTR)MID_SETTINGS_SELECTFONT              },
+	{ NM_END,   NULL,               NULL, 0,               0,   NULL                                       }
 };
 
 struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
@@ -136,25 +141,29 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 	}
 
 	tw->MenuStrip = create_menu(newmenus, tw->VisualInfo,
-		NM_Menu, "Project", MA_ID, MID_PROJECT_MENU,
-		NM_Item, "Iconify", MA_ID, MID_PROJECT_ICONIFY, MA_Key, "I",
-		NM_Item, "About...", MA_ID, MID_PROJECT_ABOUT, MA_Key, "?",
+		NM_Menu, "Project",          MA_ID, MID_PROJECT_MENU,
+		NM_Item, "Iconify",          MA_ID, MID_PROJECT_ICONIFY, MA_Key, "I",
+		NM_Item, "About...",         MA_ID, MID_PROJECT_ABOUT,   MA_Key, "?",
 		NM_Item, ML_SEPARATOR,
 		NM_Item, "Clear Scrollback", MA_ID, MID_PROJECT_CLEARSB,
 		NM_Item, ML_SEPARATOR,
-		NM_Item, "Close", MA_ID, MID_PROJECT_CLOSE, MA_Key, "K",
-		NM_Menu, "Edit", MA_ID, MID_EDIT_MENU,
-		NM_Item, "Copy", MA_ID, MID_EDIT_COPY, MA_Key, "C",
-		NM_Item, "Copy All", MA_ID, MID_EDIT_COPYALL,
-		NM_Item, "Paste", MA_ID, MID_EDIT_PASTE, MA_Key, "V",
-		NM_Menu, "Palette", MA_ID, MID_PALETTE_MENU,
-		NM_Item, "Default", MA_ID, MID_PALETTE_DEFAULT, MA_MX, ~1, MA_Selected, TRUE,
-		NM_Item, "Solarized", MA_ID, MID_PALETTE_SOLARIZED, MA_MX, ~2,
-		NM_Item, "Solarized Black", MA_ID, MID_PALETTE_SOLARIZED_BLACK, MA_MX, ~4,
-		NM_Item, "Solarized White", MA_ID, MID_PALETTE_SOLARIZED_WHITE, MA_MX, ~8,
-		NM_Item, "Soft Black", MA_ID, MID_PALETTE_SOFT_BLACK, MA_MX, ~16,
-		NM_Item, "Base16 Dark", MA_ID, MID_PALETTE_BASE16_DARK, MA_MX, ~32,
-		NM_Item, "Base16 Light", MA_ID, MID_PALETTE_BASE16_LIGHT, MA_MX, ~64,
+		NM_Item, "Close",            MA_ID, MID_PROJECT_CLOSE,   MA_Key, "K",
+		NM_Menu, "Edit",             MA_ID, MID_EDIT_MENU,
+		NM_Item, "Copy",             MA_ID, MID_EDIT_COPY,       MA_Key, "C",
+		NM_Item, "Copy All",         MA_ID, MID_EDIT_COPYALL,
+		NM_Item, "Paste",            MA_ID, MID_EDIT_PASTE,      MA_Key, "V",
+		NM_Menu, "Settings",         MA_ID, MID_SETTINGS_MENU,
+		NM_Item, "Palette",          MA_ID, MID_SETTINGS_PALETTE,
+		NM_SubItems, SI_BEGIN,
+		NM_Item, "Default",          MA_ID, MID_SETTINGS_PALETTE_DEFAULT,         MA_MX, ~1, MA_Selected, TRUE,
+		NM_Item, "Solarized",        MA_ID, MID_SETTINGS_PALETTE_SOLARIZED,       MA_MX, ~2,
+		NM_Item, "Solarized Black",  MA_ID, MID_SETTINGS_PALETTE_SOLARIZED_BLACK, MA_MX, ~4,
+		NM_Item, "Solarized White",  MA_ID, MID_SETTINGS_PALETTE_SOLARIZED_WHITE, MA_MX, ~8,
+		NM_Item, "Soft Black",       MA_ID, MID_SETTINGS_PALETTE_SOFT_BLACK,      MA_MX, ~16,
+		NM_Item, "Base16 Dark",      MA_ID, MID_SETTINGS_PALETTE_BASE16_DARK,     MA_MX, ~32,
+		NM_Item, "Base16 Light",     MA_ID, MID_SETTINGS_PALETTE_BASE16_LIGHT,    MA_MX, ~64,
+		NM_SubItems, SI_END,
+		NM_Item, "Select Font...",   MA_ID, MID_SETTINGS_SELECTFONT,
 		TAG_END);
 	if (tw->MenuStrip == NULL)
 	{
@@ -242,6 +251,12 @@ void termwin_close(struct TermWindow *tw)
 			tw->Window = NULL;
 			tw->Layout = NULL;
 			tw->Term   = NULL;
+		}
+
+		if (tw->Font != NULL)
+		{
+			IGraphics->CloseFont(tw->Font);
+			tw->Font = NULL;
 		}
 
 		if (tw->AppPort != NULL)
@@ -407,6 +422,59 @@ static BOOL termwin_uniconify(struct TermWindow *tw)
 	return result;
 }
 
+static BOOL termwin_select_font(struct TermWindow *tw)
+{
+	struct Window *window;
+	struct TextFont *font;
+	struct FontRequester *freq;
+	BOOL result;
+
+	window = (struct Window *)GET(tw->Window, WINDOW_Window);
+
+	font = (struct TextFont *)GET(tw->Term, TERM_Font);
+
+	freq = IAsl->AllocAslRequestTags(ASL_FontRequest,
+		ASLFO_FixedWidthOnly, TRUE,
+		ASLFO_MinHeight,      5,
+		ASLFO_MaxHeight,      256,
+		ASLFO_InitialName,    font->tf_Message.mn_Node.ln_Name,
+		ASLFO_InitialSize,    font->tf_YSize,
+		TAG_END);
+	if (freq == NULL)
+		return FALSE;
+
+	result = IAsl->AslRequestTags(freq,
+		ASLFO_Window, window,
+		ASLFO_Screen, tw->Screen,
+		TAG_END);
+
+	if (result)
+	{
+		struct TextFont *newfont;
+
+		newfont = IDiskfont->OpenDiskFont(&freq->fo_Attr);
+		if (newfont == NULL)
+		{
+			IAsl->FreeAslRequest(freq);
+			return FALSE;
+		}
+
+		IIntuition->SetAttrs(tw->Term,
+			TERM_Font, newfont,
+			TAG_END);
+		IIntuition->IDoMethod(tw->Window, WM_RETHINK);
+
+		if (tw->Font != NULL)
+			IGraphics->CloseFont(tw->Font);
+
+		tw->Font = newfont;
+	}
+
+	IAsl->FreeAslRequest(freq);
+
+	return result;
+}
+
 BOOL termwin_handle_input(struct TermWindow *tw)
 {
 	ULONG result;
@@ -417,17 +485,6 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 	struct tpKeyboard tpk;
 	struct tpGeneric tpg;
 	BOOL done = FALSE;
-
-	static const char *const palette_name[] =
-	{
-		NULL,
-		"solarized",
-		"solarized-black",
-		"solarized-white",
-		"soft-black",
-		"base16-dark",
-		"base16-light"
-	};
 
 	while ((result = IIntuition->IDoMethod(tw->Window, WM_HANDLEINPUT, &code)) != WMHI_LASTMSG)
 	{
@@ -491,14 +548,36 @@ BOOL termwin_handle_input(struct TermWindow *tw)
 							DGM(tw->Term, tw->Window, (Msg)&tpg);
 							break;
 
-						case MID_PALETTE_DEFAULT:
-						case MID_PALETTE_SOLARIZED:
-						case MID_PALETTE_SOLARIZED_BLACK:
-						case MID_PALETTE_SOLARIZED_WHITE:
-						case MID_PALETTE_SOFT_BLACK:
-						case MID_PALETTE_BASE16_DARK:
-						case MID_PALETTE_BASE16_LIGHT:
-							termwin_set_palette(tw, palette_name[mid - MID_PALETTE_DEFAULT]);
+						case MID_SETTINGS_PALETTE_DEFAULT:
+							termwin_set_palette(tw, NULL);
+							break;
+
+						case MID_SETTINGS_PALETTE_SOLARIZED:
+							termwin_set_palette(tw, "solarized");
+							break;
+
+						case MID_SETTINGS_PALETTE_SOLARIZED_BLACK:
+							termwin_set_palette(tw, "solarized-black");
+							break;
+
+						case MID_SETTINGS_PALETTE_SOLARIZED_WHITE:
+							termwin_set_palette(tw, "solarized-white");
+							break;
+
+						case MID_SETTINGS_PALETTE_SOFT_BLACK:
+							termwin_set_palette(tw, "soft-black");
+							break;
+
+						case MID_SETTINGS_PALETTE_BASE16_DARK:
+							termwin_set_palette(tw, "base16-dark");
+							break;
+
+						case MID_SETTINGS_PALETTE_BASE16_LIGHT:
+							termwin_set_palette(tw, "base16-light");
+							break;
+
+						case MID_SETTINGS_SELECTFONT:
+							termwin_select_font(tw);
 							break;
 					}
 				}

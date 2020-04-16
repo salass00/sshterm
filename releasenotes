@@ -86,3 +86,5 @@ SSHTerm 1.8 (d.m.2020)
 - Replaced mbrtowc() for parsing UTF-8 with the tsm_utf8_mach parser from
   libtsm.
 
+- Added "Select Font..." menu item.
+

@@ -25,16 +25,17 @@
 #include <proto/exec.h>
 #include <proto/utility.h>
 #include <proto/dos.h>
-#include <proto/z.h>
-#include <proto/bsdsocket.h>
-#include <proto/amissl.h>
 #include <proto/diskfont.h>
 #include <proto/graphics.h>
 #include <proto/intuition.h>
 #include <proto/gadtools.h>
+#include <proto/asl.h>
 #include <proto/keymap.h>
 #include <proto/layers.h>
 #include <proto/icon.h>
+#include <proto/z.h>
+#include <proto/bsdsocket.h>
+#include <proto/amissl.h>
 
 #include <libssh2.h>
 
