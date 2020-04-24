@@ -46,7 +46,7 @@ struct TermWindow {
 	struct shl_ring        RingBuffer;
 	UWORD                  Columns;
 	UWORD                  Rows;
-	BOOL                   NewSize:1;
+	BOOL                   NewSize;
 };
 
 enum {
