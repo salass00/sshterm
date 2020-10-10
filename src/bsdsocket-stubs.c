@@ -19,6 +19,9 @@
  * Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/* Fixes a warning when compiling with older roadshow includes */
+#define __timeval timeval
+
 #include <proto/bsdsocket.h>
 #include <sys/filio.h>
 #include <sys/socket.h>
