@@ -77,7 +77,7 @@ SSHTerm 1.7 (23.3.2020)
 - Compiled using AmiSSL 4.4.
 
 
-SSHTerm 1.8 (d.m.2020)
+SSHTerm 1.8 (30.10.2020)
 
 - Added blink support (uses a hardcoded 1 second delay for now).
 
