@@ -259,9 +259,19 @@ static void tsm_log_cb(void *data, const char *file, int line,
                        unsigned int sev, const char *format,
                        va_list args)
 {
-	UNUSED struct TermData *td = data;
-
-	/* FIXME: Implement me */
+	struct TermData *td = data;
+	struct TermHookMsg thm;
+	
+	thm.MethodID       = THM_LOG;
+	thm.tlhm_File      = file;
+	thm.tlhm_Line      = line;
+	thm.tlhm_Function  = func;
+	thm.tlhm_Subsystem = subs;
+	thm.tlhm_Severity  = sev;
+	thm.tlhm_Format    = format;
+	thm.tlhm_Args      = args;
+	
+	call_hook(td, &thm);
 }
 
 static void tsm_write_cb(struct tsm_vte *vte, const char *u8,

@@ -83,6 +83,7 @@ struct tpGeneric
 #define THM_RESIZE      (THM_DUMMY + 2)
 #define THM_BELL        (THM_DUMMY + 3)
 #define THM_WINDOWTITLE (THM_DUMMY + 4)
+#define THM_LOG         (THM_DUMMY + 5)
 
 struct TermHookMsg
 {
@@ -105,6 +106,17 @@ struct TermHookMsg
 		struct
 		{
 			CONST_STRPTR twthm_Title;
+		};
+		/* THM_LOG */
+		struct
+		{
+			CONST_STRPTR tlhm_File;
+			LONG         tlhm_Line;
+			CONST_STRPTR tlhm_Function;
+			CONST_STRPTR tlhm_Subsystem;
+			ULONG        tlhm_Severity;
+			CONST_STRPTR tlhm_Format;
+			APTR         tlhm_Args;
 		};
 	};
 };
