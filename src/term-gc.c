@@ -910,7 +910,7 @@ static int tsm_draw_cb(struct tsm_screen *con, const uint32_t *ch,
 	return 0;
 }
 
-static void render_cells(struct TermData *td, struct RastPort *rp, UWORD miny, UWORD maxy, BOOL domargins)
+static void render_cells(struct TermData *td, struct RastPort *rp, UWORD miny, UWORD maxy)
 {
 	td->td_RPort = rp;
 
@@ -943,37 +943,37 @@ static void render_cells(struct TermData *td, struct RastPort *rp, UWORD miny, U
 	#endif
 
 	td->td_RPort = NULL;
+}
 
-	if (domargins)
+/* Fill margins with the VTE default background color */
+static void fill_margins(struct TermData *td, struct RastPort *rp)
+{
+	struct tsm_screen_attr attr;
+
+	if (td->td_IBox.Width > td->td_Width || td->td_IBox.Height > td->td_Height)
 	{
-		/* Fill margins with the VTE default background color */
-		struct tsm_screen_attr attr;
+		tsm_vte_get_def_attr(td->td_VTE, &attr);
 
-		if (td->td_IBox.Width > td->td_Width || td->td_IBox.Height > td->td_Height)
+		IGraphics->SetRPAttrs(rp,
+			RPTAG_APenColor, *(ULONG *)(&attr.br - 1) | 0xff000000,
+			TAG_END);
+
+		if (td->td_IBox.Width > td->td_Width)
 		{
-			tsm_vte_get_def_attr(td->td_VTE, &attr);
+			IGraphics->RectFill(rp,
+				                td->td_IBox.Left + td->td_Width,
+				                td->td_IBox.Top,
+				                td->td_IBox.Left + td->td_IBox.Width - 1,
+				                td->td_IBox.Top + td->td_Height - 1);
+		}
 
-			IGraphics->SetRPAttrs(rp,
-				RPTAG_APenColor, *(ULONG *)(&attr.br - 1) | 0xff000000,
-				TAG_END);
-
-			if (td->td_IBox.Width > td->td_Width)
-			{
-				IGraphics->RectFill(rp,
-					                td->td_IBox.Left + td->td_Width,
-					                td->td_IBox.Top,
-					                td->td_IBox.Left + td->td_IBox.Width - 1,
-					                td->td_IBox.Top + td->td_Height - 1);
-			}
-
-			if (td->td_IBox.Height > td->td_Height)
-			{
-				IGraphics->RectFill(rp,
-					                td->td_IBox.Left,
-					                td->td_IBox.Top + td->td_Height,
-					                td->td_IBox.Left + td->td_IBox.Width - 1,
-					                td->td_IBox.Top + td->td_IBox.Height - 1);
-			}
+		if (td->td_IBox.Height > td->td_Height)
+		{
+			IGraphics->RectFill(rp,
+				                td->td_IBox.Left,
+				                td->td_IBox.Top + td->td_Height,
+				                td->td_IBox.Left + td->td_IBox.Width - 1,
+				                td->td_IBox.Top + td->td_IBox.Height - 1);
 		}
 	}
 }
@@ -1073,9 +1073,9 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 		ILayers->InstallLayerHook(layer, bfh);
 
 		if (scroll < 0)
-			render_cells(td, rp, 0, 1 - scroll, FALSE);
+			render_cells(td, rp, 0, 1 - scroll);
 		else
-			render_cells(td, rp, td->td_Rows - scroll, td->td_Rows - 1, FALSE);
+			render_cells(td, rp, td->td_Rows - scroll, td->td_Rows - 1);
 
 		if (scroll_damage)
 		{
@@ -1084,9 +1084,11 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 			ILayers->BeginUpdate(layer);
 
 			if (scroll < 0)
-				render_cells(td, rp, -scroll, td->td_Rows - 1, TRUE);
+				render_cells(td, rp, -scroll, td->td_Rows - 1);
 			else
-				render_cells(td, rp, 0, td->td_Rows - scroll - 1, TRUE);
+				render_cells(td, rp, 0, td->td_Rows - scroll - 1);
+
+			fill_margins(td, rp);
 
 			ILayers->EndUpdate(layer, FALSE);
 		}
@@ -1104,7 +1106,9 @@ static ULONG TERM_render(Class *cl, Object *obj, struct gpRender *gpr)
 			td->td_Age = 0;
 		}
 
-		render_cells(td, rp, 0, td->td_Rows - 1, TRUE);
+		render_cells(td, rp, 0, td->td_Rows - 1);
+
+		fill_margins(td, rp);
 	}
 
 	return 1;
