@@ -108,11 +108,6 @@ struct TermData
 	ULONG              td_TmpSize;
 	#endif
 
-	#ifdef DEBUG
-	ULONG              td_SkipCount;
-	ULONG              td_UpdateCount;
-	#endif
-
 	struct Screen     *td_Screen;
 };
 
@@ -691,10 +686,6 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 
 	IIntuition->GadgetBox(G(obj), gpl->gpl_GInfo, GBD_GINFO, 0, &td->td_IBox);
 
-	#ifdef DEBUG
-	IExec->DebugPrintF("GM_LAYOUT width: %u height: %u\n", td->td_IBox.Width, td->td_IBox.Height);
-	#endif
-
 	columns = td->td_IBox.Width / td->td_CellW;
 	rows = td->td_IBox.Height / td->td_CellH;
 
@@ -710,11 +701,6 @@ static ULONG TERM_layout(Class *cl, Object *obj, struct gpLayout *gpl)
 		ULONG top, visible, total;
 
 		r = tsm_screen_resize(td->td_Con, columns, rows);
-		#ifdef DEBUG
-		if (r < 0)
-			IExec->DebugPrintF("tsm_screen_resize: %d\n", r);
-		}
-		#endif
 
 		td->td_Columns = tsm_screen_get_width(td->td_Con);
 		td->td_Rows = tsm_screen_get_height(td->td_Con);
@@ -783,24 +769,10 @@ static int tsm_draw_cb(struct tsm_screen *con, const uint32_t *ch,
 	TEXT tmp[1];
 
 	if (age != 0 && age <= td->td_Age)
-	{
-		#ifdef DEBUG
-		td->td_SkipCount++;
-		#endif
 		return 0;
-	}
 
 	if (posy < td->td_MinY || posy > td->td_MaxY)
-	{
-		#ifdef DEBUG
-		td->td_SkipCount++;
-		#endif
 		return 0;
-	}
-
-	#ifdef DEBUG
-	td->td_UpdateCount++;
-	#endif
 
 	cellw = td->td_CellW;
 	cellh = td->td_CellH;
@@ -927,20 +899,10 @@ static void render_cells(struct TermData *td, struct RastPort *rp, UWORD miny, U
 		IGraphics->SetFont(rp, td->td_Font);
 	}
 
-	#ifdef DEBUG
-	td->td_SkipCount = 0;
-	td->td_UpdateCount = 0;
-	#endif
-
 	td->td_MinY = miny;
 	td->td_MaxY = maxy;
 
 	td->td_Age = tsm_screen_draw(td->td_Con, &tsm_draw_cb, td);
-
-	#ifdef DEBUG
-	IExec->DebugPrintF("GM_RENDER cells rendered: %lu skipped: %lu\n",
-	                   td->td_UpdateCount, td->td_SkipCount);
-	#endif
 
 	td->td_RPort = NULL;
 }
