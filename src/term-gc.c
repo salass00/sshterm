@@ -126,7 +126,7 @@ Class *init_term_gc(void)
 	cl = IIntuition->MakeClass("termgclass", "gadgetclass", NULL, sizeof(struct TermData), 0);
 	if (cl != NULL)
 	{
-		cl->cl_Dispatcher.h_Entry = TERM_dispatch;
+		cl->cl_Dispatcher.h_Entry = (HOOKFUNC)TERM_dispatch;
 	}
 
 	return cl;
