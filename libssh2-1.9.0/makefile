@@ -8,7 +8,7 @@ WARNINGS = -Wall -Wwrite-strings -Werror
 INCLUDES = -I./include -I./src
 DEFINES  = -DLIBSSH2_OPENSSL -DLIBSSH2_DH_GEX_NEW -DLIBSSH2_HAVE_ZLIB -D__USE_INLINE__
 
-CFLAGS  = --std=gnu90 $(OPTIMIZE) $(DEBUG) $(WARNINGS) $(INCLUDES) $(DEFINES)
+CFLAGS  = --std=gnu99 $(OPTIMIZE) $(DEBUG) $(WARNINGS) $(INCLUDES) $(DEFINES)
 
 SRCS = agent.c bcrypt_pbkdf.c blowfish.c channel.c comp.c crypt.c global.c \
        hostkey.c keepalive.c kex.c knownhost.c libgcrypt.c mac.c mbedtls.c \
