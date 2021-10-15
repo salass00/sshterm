@@ -1426,7 +1426,7 @@ static ULONG TERM_copy(Class *cl, Object *obj, struct tpGeneric *tpg)
 {
 	struct TermData *td = INST_DATA(cl, obj);
 	STRPTR utf8;
-	ULONG utf8_len;
+	LONG utf8_len;
 	ULONG result = 0;
 
 	if (tpg->MethodID == TM_COPY)
@@ -1434,7 +1434,7 @@ static ULONG TERM_copy(Class *cl, Object *obj, struct tpGeneric *tpg)
 	else
 		utf8_len = tsm_screen_copy_all(td->td_Con, &utf8);
 
-	if (utf8_len > 0)
+	if (utf8_len >= 0)
 	{
 		result = write_clip(PRIMARY_CLIP, utf8, utf8_len);
 
