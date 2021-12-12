@@ -7,7 +7,7 @@
         } 
     },
     "extensions": [
-        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
         "mhutchie.git-graph"
     ],
     "remoteUser": "amidev"
