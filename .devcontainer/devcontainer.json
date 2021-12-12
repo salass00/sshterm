@@ -1,0 +1,14 @@
+{
+    "name": "AmigaOS4 GCC-11",
+    "build": { 
+        "dockerfile": "Dockerfile", 
+        "args": {
+             "GCC_VER" : "11"
+        } 
+    },
+    "extensions": [
+        "ms-vscode.cpptools",
+        "mhutchie.git-graph"
+    ],
+    "remoteUser": "amidev"
+}

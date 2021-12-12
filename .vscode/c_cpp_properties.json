@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${AOS4_SDK_INC}/**",
+                "${AOS4_NLIB_INC}/**",
+                "${AOS4_CLIB_INC}/**",
+                "${AOS4_NET_INC}/**",
+                "${AMISSL_INC}/**",
+                "${MUI50_INC}/**",
+                "${SDL_INC}/**",
+                "${SDL2_INC}/**",
+                "${OO_INC}/**",
+                "${ZLIB_INC}/**"
+            ],
+            "defines": [
+                "__NOLIBBASE__"
+            ],
+            "compilerPath": "/opt/ppc-amigaos/bin/ppc-amigaos-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "linux-gcc-x86"
+        }
+    ],
+    "version": 4
+}

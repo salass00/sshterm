@@ -8,7 +8,7 @@ LIBSSH2DIR = libssh2-1.9.0
 
 OPTIMIZE = -O2
 DEBUG    = -g
-INCLUDES = -I. -I./$(LIBSSH2DIR)/include -I./libtsm/tsm -I./libtsm/shared
+INCLUDES = -I. -I./$(LIBSSH2DIR)/include -I./libtsm/tsm -I./libtsm/shared -I${AMISSL_INC} -I${ZLIB_INC}
 WARNINGS = -Wall -Wwrite-strings -Werror
 DEFINES  = -D__NOLIBBASE__ -DOFFSCREEN_BUFFER
 

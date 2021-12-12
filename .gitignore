@@ -8,3 +8,5 @@ SSHTerm
 SSHTerm.debug
 # Ignore release archives
 *.7z
+.vscode/settings.json
+.DS_Store

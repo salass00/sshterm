@@ -5,7 +5,7 @@ RANLIB = ppc-amigaos-ranlib
 OPTIMIZE = -O2
 DEBUG    = -g
 WARNINGS = -Wall -Wwrite-strings -Werror
-INCLUDES = -I./include -I./src
+INCLUDES = -I./include -I./src -I${AMISSL_INC} -I${ZLIB_INC}
 DEFINES  = -DLIBSSH2_OPENSSL -DLIBSSH2_DH_GEX_NEW -DLIBSSH2_HAVE_ZLIB -D__USE_INLINE__
 
 CFLAGS  = --std=gnu99 $(OPTIMIZE) $(DEBUG) $(WARNINGS) $(INCLUDES) $(DEFINES)
