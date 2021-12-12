@@ -119,7 +119,7 @@ static const struct NewMenu newmenus[] =
 	{ NM_END,   NULL,               NULL, 0,               0,   NULL                                       }
 };
 
-struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
+struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb, const char *win_title)
 {
 	struct TermWindow *tw;
 	Object *scroller;
@@ -198,7 +198,8 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb)
 
 	tw->Window = IIntuition->NewObject(WindowClass, NULL,
 		WA_PubScreen,         tw->Screen,
-		WA_Title,             VERS,
+		WA_ScreenTitle,       VERS,
+		WA_Title,			  win_title,
 		WA_Flags,             WFLG_ACTIVATE | WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET |
 		                      WFLG_SIZEGADGET | WFLG_NEWLOOKMENUS | WFLG_NOCAREREFRESH,
 		WA_IDCMP,             IDCMP_CLOSEWINDOW | IDCMP_MENUPICK | IDCMP_RAWKEY | IDCMP_MOUSEMOVE |
@@ -394,6 +395,11 @@ static ULONG term_idcmp_cb(struct Hook *hook, Object *winobj, struct IntuiMessag
 	DGM(tw->Term, tw->Window, (Msg)&tpm);
 
 	return 0;
+}
+
+void termwin_set_title(struct TermWindow *tw, const char *wintitle)
+{
+	IIntuition->SetAttrs(tw->Window, WA_Title, wintitle);
 }
 
 static BOOL termwin_iconify(struct TermWindow *tw)
