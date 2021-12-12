@@ -38,7 +38,8 @@ static const char template[] =
 	"PASSWORD,"
 	"NOSSHAGENT/S,"
 	"KEYFILE/K,"
-	"MAXSB/N/K";
+	"MAXSB/N/K,"
+	"TITLE/K";
 
 enum {
 	ARG_HOSTADDR,
@@ -48,6 +49,7 @@ enum {
 	ARG_NOSSHAGENT,
 	ARG_KEYFILE,
 	ARG_MAXSB,
+	ARG_TITLE,
 	NUM_ARGS
 };
 
@@ -127,6 +129,79 @@ static char *request_password(unsigned int auth_pw, ...)
 	return password;
 }
 
+static void countLength( const char character,int *length ) {
+	*(int *)length += 1;
+}
+
+/*
+** Supports:
+**	%p for port number PORT
+**	%h for hostname as provided by HOSTADDR
+**  %u for username as provided by USER
+**  %% for single %
+*/
+static char * createTitleString( const char *title_pattern,const LONG *arguments ) {
+	if( title_pattern == NULL )
+		title_pattern = "Connected to %h as %u";
+
+	int length = strlen( title_pattern );
+	int placeholders_count = 0;
+	for( int index = 0;title_pattern[ index ] != '\0';index++ )
+		if( title_pattern[ index ] == '%' ) {
+			switch( title_pattern[ ++index ] ) {
+				case 'p':
+					length++;
+				case 'u':
+				case 'h':
+					placeholders_count++;
+					break;
+				case '%':
+					// skip
+					break;
+				default:
+					fprintf(stderr, "Warning: Unknow/unsupported sublimation character '%c' position %d\n",title_pattern[ index ],index );
+					break;
+			}
+		}
+
+	ULONG placeholders[ placeholders_count ];
+	char pattern[ length ];
+	int pattern_index = 0;
+	placeholders_count = 0;
+	for( int index = 0;title_pattern[ index ] != '\0';index++ ) {
+		pattern[ pattern_index++ ] = title_pattern[ index ];
+		if( title_pattern[ index ] == '%' ) {
+			switch( title_pattern[ ++index ] ) {
+				case 'p':
+					placeholders[ placeholders_count++ ] = arguments[ ARG_PORT ];
+					pattern[ pattern_index++ ] = 'l';
+					pattern[ pattern_index++ ] = 'd';
+					break;
+				case 'u':
+					placeholders[ placeholders_count++ ] = arguments[ ARG_USER ];
+					pattern[ pattern_index++ ] = 's';
+					break;
+				case 'h':
+					placeholders[ placeholders_count++ ] = arguments[ ARG_HOSTADDR ];
+					pattern[ pattern_index++ ] = 's';
+					break;
+					break;
+				default:
+					pattern[ pattern_index++ ] = title_pattern[ index ];
+					break;
+			}
+		}
+	}
+	pattern[ pattern_index++ ] = '\0';
+
+	IExec->RawDoFmt( pattern,placeholders,(void (*)())countLength,&length );
+
+	char *title = malloc( length );
+	IExec->RawDoFmt( pattern,placeholders,NULL,title );
+
+	return title;
+}
+
 struct ssh_session {
 	int              socket;
 	LIBSSH2_SESSION *session;
@@ -176,6 +251,7 @@ int sshterm(int argc, char **argv)
 	struct RDArgs *rda = NULL;
 	const char *hostname;
 	const char *username;
+	char *windowtitle = NULL;
 	LONG sb_size = 2000;
 	struct Screen *screen = NULL;
 	struct TermWindow *termwin = NULL;
@@ -223,7 +299,8 @@ int sshterm(int argc, char **argv)
 			sb_size = 64000;
 	}
 
-	termwin = termwin_open(screen, sb_size);
+	windowtitle = createTitleString( (char *)args[ARG_TITLE],args );
+	termwin = termwin_open(screen, sb_size,windowtitle );
 	if (termwin == NULL)
 	{
 		fprintf(stderr, "Failed to create terminal\n");
@@ -663,6 +740,11 @@ out:
 	{
 		termwin_close(termwin);
 		termwin = NULL;
+	}
+
+	if( windowtitle != NULL )
+	{
+		free( windowtitle );
 	}
 
 	if (AboutWindowPID != 0)
