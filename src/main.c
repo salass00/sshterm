@@ -110,7 +110,7 @@ static char *request_password(unsigned int auth_pw, ...)
 
 				if (result && buffer[0] != '\0')
 				{
-					password = strdup(buffer);
+					password = strndup(buffer, sizeof(buffer));
 				}
 
 				IIntuition->DisposeObject(reqobj);
