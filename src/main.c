@@ -136,11 +136,12 @@ static char *request_password(unsigned int auth_pw, ...)
 **  %u for username as provided by USER
 **  %% for single %
 */
-static char *create_title_string(const char *title_pattern, const LONG *arguments) {
+static char *create_title_string(const char *title_pattern, const LONG *args) {
 	int length, placeholders_count, index;
 	ULONG *placeholders;
 	char *pattern;
 	int pattern_index;
+	int port;
 
 	if (title_pattern == NULL)
 		title_pattern = "Connected to %h as %u";
@@ -182,16 +183,21 @@ static char *create_title_string(const char *title_pattern, const LONG *argument
 			switch(title_pattern[++index])
 			{
 				case 'p':
-					placeholders[placeholders_count++] = arguments[ARG_PORT];
+					port = 22;
+					if (args[ARG_PORT])
+					{
+						port = *(LONG *)args[ARG_PORT];
+					}
+					placeholders[placeholders_count++] = port;
 					pattern[pattern_index++] = 'l';
 					pattern[pattern_index++] = 'd';
 					break;
 				case 'u':
-					placeholders[placeholders_count++] = arguments[ARG_USER];
+					placeholders[placeholders_count++] = args[ARG_USER];
 					pattern[pattern_index++] = 's';
 					break;
 				case 'h':
-					placeholders[placeholders_count++] = arguments[ARG_HOSTADDR];
+					placeholders[placeholders_count++] = args[ARG_HOSTADDR];
 					pattern[pattern_index++] = 's';
 					break;
 				default:
