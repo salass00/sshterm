@@ -129,10 +129,6 @@ static char *request_password(unsigned int auth_pw, ...)
 	return password;
 }
 
-static void countLength( const char character,int *length ) {
-	*(int *)length += 1;
-}
-
 /*
 ** Supports:
 **	%p for port number PORT
@@ -140,15 +136,23 @@ static void countLength( const char character,int *length ) {
 **  %u for username as provided by USER
 **  %% for single %
 */
-static char * createTitleString( const char *title_pattern,const LONG *arguments ) {
-	if( title_pattern == NULL )
+static char *create_title_string(const char *title_pattern, const LONG *arguments) {
+	int length, placeholders_count, index;
+	ULONG *placeholders;
+	char *pattern;
+	int pattern_index;
+
+	if (title_pattern == NULL)
 		title_pattern = "Connected to %h as %u";
 
-	int length = strlen( title_pattern );
-	int placeholders_count = 0;
-	for( int index = 0;title_pattern[ index ] != '\0';index++ )
-		if( title_pattern[ index ] == '%' ) {
-			switch( title_pattern[ ++index ] ) {
+	length = strlen(title_pattern);
+	placeholders_count = 0;
+	for (index = 0; title_pattern[index] != '\0'; index++)
+	{
+		if (title_pattern[index] == '%')
+		{
+			switch(title_pattern[++index])
+			{
 				case 'p':
 					length++;
 				case 'u':
@@ -159,47 +163,46 @@ static char * createTitleString( const char *title_pattern,const LONG *arguments
 					// skip
 					break;
 				default:
-					fprintf(stderr, "Warning: Unknow/unsupported sublimation character '%c' position %d\n",title_pattern[ index ],index );
-					break;
-			}
-		}
-
-	ULONG placeholders[ placeholders_count ];
-	char pattern[ length ];
-	int pattern_index = 0;
-	placeholders_count = 0;
-	for( int index = 0;title_pattern[ index ] != '\0';index++ ) {
-		pattern[ pattern_index++ ] = title_pattern[ index ];
-		if( title_pattern[ index ] == '%' ) {
-			switch( title_pattern[ ++index ] ) {
-				case 'p':
-					placeholders[ placeholders_count++ ] = arguments[ ARG_PORT ];
-					pattern[ pattern_index++ ] = 'l';
-					pattern[ pattern_index++ ] = 'd';
-					break;
-				case 'u':
-					placeholders[ placeholders_count++ ] = arguments[ ARG_USER ];
-					pattern[ pattern_index++ ] = 's';
-					break;
-				case 'h':
-					placeholders[ placeholders_count++ ] = arguments[ ARG_HOSTADDR ];
-					pattern[ pattern_index++ ] = 's';
-					break;
-					break;
-				default:
-					pattern[ pattern_index++ ] = title_pattern[ index ];
+					fprintf(stderr, "Warning: Unknown/unsupported sublimation character '%c' position %d\n",
+					        title_pattern[index], index);
 					break;
 			}
 		}
 	}
-	pattern[ pattern_index++ ] = '\0';
 
-	IExec->RawDoFmt( pattern,placeholders,(void (*)())countLength,&length );
+	placeholders = alloca(placeholders_count * sizeof(ULONG));
+	pattern = alloca(length);
+	pattern_index = 0;
+	placeholders_count = 0;
+	for (index = 0; title_pattern[index] != '\0'; index++)
+	{
+		pattern[pattern_index++] = title_pattern[index];
+		if (title_pattern[index] == '%')
+		{
+			switch(title_pattern[++index])
+			{
+				case 'p':
+					placeholders[placeholders_count++] = arguments[ARG_PORT];
+					pattern[pattern_index++] = 'l';
+					pattern[pattern_index++] = 'd';
+					break;
+				case 'u':
+					placeholders[placeholders_count++] = arguments[ARG_USER];
+					pattern[pattern_index++] = 's';
+					break;
+				case 'h':
+					placeholders[placeholders_count++] = arguments[ARG_HOSTADDR];
+					pattern[pattern_index++] = 's';
+					break;
+				default:
+					pattern[pattern_index++] = title_pattern[index];
+					break;
+			}
+		}
+	}
+	pattern[pattern_index++] = '\0';
 
-	char *title = malloc( length );
-	IExec->RawDoFmt( pattern,placeholders,NULL,title );
-
-	return title;
+	return IUtility->VASPrintf(pattern, placeholders);
 }
 
 struct ssh_session {
@@ -299,8 +302,13 @@ int sshterm(int argc, char **argv)
 			sb_size = 64000;
 	}
 
-	windowtitle = createTitleString( (char *)args[ARG_TITLE],args );
-	termwin = termwin_open(screen, sb_size,windowtitle );
+	windowtitle = create_title_string((const char *)args[ARG_TITLE], args);
+	if (windowtitle == NULL)
+	{
+		goto out;
+	}
+
+	termwin = termwin_open(screen, sb_size, windowtitle);
 	if (termwin == NULL)
 	{
 		fprintf(stderr, "Failed to create terminal\n");
@@ -742,9 +750,9 @@ out:
 		termwin = NULL;
 	}
 
-	if( windowtitle != NULL )
+	if (windowtitle != NULL)
 	{
-		free( windowtitle );
+		free(windowtitle);
 	}
 
 	if (AboutWindowPID != 0)

@@ -31,9 +31,9 @@ KEYFILE can be used to change the key file used for public key authentication
 MAXSB is the maximum number of lines stored in the scrollback buffer (set to
 zero to disable this feature). The default value is 2000 lines.
 
-TITLE can be used to define a own windows title. The default window title
-is "Connected to %h as %u". In the title session depended information can 
-be added via the following escape sequences:
+TITLE can be used to set a custom window title. The default window title is
+"Connected to %h as %u". Session dependent information can be added via the
+following escape sequences:
 
 - %p for the port number. The value corresponds to the value set with PORT.
 - %h for the IP address or domain name of the SSH server. The value corresponds 
