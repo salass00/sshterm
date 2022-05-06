@@ -758,7 +758,7 @@ out:
 
 	if (windowtitle != NULL)
 	{
-		free(windowtitle);
+		IExec->FreeVec(windowtitle);
 	}
 
 	if (AboutWindowPID != 0)
