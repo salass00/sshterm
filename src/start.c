@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 
 	if (IAmiSSL != NULL)
 	{
-		IAmiSSL->CleanupAmiSSL(TAG_END);
+		IAmiSSL->CleanupAmiSSLA(NULL);
 		IExec->DropInterface((struct Interface *)IAmiSSL);
 		IAmiSSL = NULL;
 	}
