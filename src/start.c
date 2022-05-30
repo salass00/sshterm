@@ -325,14 +325,14 @@ int main(int argc, char **argv)
 		IGadTools = NULL;
 	}
 
+	libssh2_exit();
+
 	if (IAmiSSL != NULL)
 	{
 		IAmiSSL->CleanupAmiSSLA(NULL);
 		IExec->DropInterface((struct Interface *)IAmiSSL);
 		IAmiSSL = NULL;
 	}
-
-	libssh2_exit();
 
 	if (AmiSSLBase != NULL)
 	{
