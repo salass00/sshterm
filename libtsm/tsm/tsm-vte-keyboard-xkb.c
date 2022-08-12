@@ -206,7 +206,10 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 
 	switch (keysym) {
 		case XKB_KEY_BackSpace:
-			vte_write(vte, "\x08", 1);
+			if (vte->backspace_sends_delete)
+				vte_write(vte, "\x7f", 1);
+			else
+				vte_write(vte, "\x08", 1);
 			return true;
 		case XKB_KEY_Tab:
 		case XKB_KEY_KP_Tab:

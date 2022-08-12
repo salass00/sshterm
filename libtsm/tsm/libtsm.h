@@ -427,6 +427,18 @@ void tsm_vte_reset(struct tsm_vte *vte);
 void tsm_vte_hard_reset(struct tsm_vte *vte);
 void tsm_vte_input(struct tsm_vte *vte, const char *u8, size_t len);
 
+/**
+ * @brief Set backspace key to send either backspace or delete.
+ *
+ * Some terminals send ASCII backspace (010, 8, 0x08), some send ASCII delete
+ * (0177, 127, 0x7f).
+ *
+ * The default for vte is to send ASCII backspace.
+ *
+ * @param vte The vte object to set on
+ * @param enable Send ASCII delete if \c true, send ASCII backspace if \c false.
+ */
+void tsm_vte_set_backspace_sends_delete(struct tsm_vte *vte, bool enable);
 #ifdef __amigaos4__
 bool tsm_vte_handle_keyboard_amiga(struct tsm_vte *vte, uint16_t code,
                                    uint16_t qualifier, uint32_t unicode);

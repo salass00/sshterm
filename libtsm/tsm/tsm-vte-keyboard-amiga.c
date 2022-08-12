@@ -187,7 +187,10 @@ bool tsm_vte_handle_keyboard_amiga(struct tsm_vte *vte, uint16_t code,
 
 	switch (code) {
 		case RAWKEY_BACKSPACE:
-			vte_write(vte, "\x08", 1);
+			if (vte->backspace_sends_delete)
+				vte_write(vte, "\x7f", 1);
+			else
+				vte_write(vte, "\x08", 1);
 			return true;
 		case RAWKEY_TAB:
 			vte_write(vte, "\x09", 1);

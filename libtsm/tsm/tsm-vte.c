@@ -153,6 +153,7 @@ struct tsm_vte {
 	struct tsm_screen *con;
 	tsm_vte_write_cb write_cb;
 	void *data;
+	bool backspace_sends_delete;
 
 	struct tsm_utf8_mach mach;
 	unsigned long parse_cnt;
@@ -439,6 +440,7 @@ int tsm_vte_new(struct tsm_vte **out, struct tsm_screen *con,
 	vte->con = con;
 	vte->write_cb = write_cb;
 	vte->data = data;
+	vte->backspace_sends_delete = false;
 	vte->osc_cb = NULL;
 	vte->osc_data = NULL;
 	memcpy(vte->palette, color_palette, sizeof(vte->palette));
@@ -2408,6 +2410,12 @@ void tsm_vte_input(struct tsm_vte *vte, const char *u8, size_t len)
 		}
 	}
 	--vte->parse_cnt;
+}
+
+SHL_EXPORT
+void tsm_vte_set_backspace_sends_delete(struct tsm_vte *vte, bool enable)
+{
+	vte->backspace_sends_delete = enable;
 }
 
 #ifdef __amigaos4__
