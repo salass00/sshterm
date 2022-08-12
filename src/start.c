@@ -72,8 +72,7 @@ int h_errno;
 
 int main(int argc, char **argv)
 {
-	struct Library *AmiSSLBase = NULL;
-	int             rc         = RETURN_ERROR;
+	int rc = RETURN_ERROR;
 
 	/* Disable newlib CTRL-C handling. */
 	signal(SIGINT, SIG_IGN);
@@ -162,27 +161,12 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		if (!IAmiSSLMaster->InitAmiSSLMaster(AMISSL_CURRENT_VERSION, TRUE))
-		{
-			break;
-		}
-
-		AmiSSLBase = IAmiSSLMaster->OpenAmiSSL();
-		if (AmiSSLBase == NULL)
-		{
-			break;
-		}
-
-		IAmiSSL = (struct AmiSSLIFace *)IExec->GetInterface(AmiSSLBase, "main", 1, NULL);
-		if (IAmiSSL == NULL)
-		{
-			break;
-		}
-
-		if (IAmiSSL->InitAmiSSL(
-			AmiSSL_ErrNoPtr, __errno(),
-			AmiSSL_ISocket,  ISocket,
-			TAG_END))
+		if (IAmiSSLMaster->OpenAmiSSLTags(AMISSL_CURRENT_VERSION,
+			AmiSSL_UsesOpenSSLStructs, TRUE,
+			AmiSSL_GetIAmiSSL,         &IAmiSSL,
+			AmiSSL_ISocket,            ISocket,
+			AmiSSL_ErrNoPtr,           __errno(),
+			TAG_END) != 0)
 		{
 			break;
 		}
@@ -329,15 +313,8 @@ int main(int argc, char **argv)
 
 	if (IAmiSSL != NULL)
 	{
-		IAmiSSL->CleanupAmiSSLA(NULL);
-		IExec->DropInterface((struct Interface *)IAmiSSL);
-		IAmiSSL = NULL;
-	}
-
-	if (AmiSSLBase != NULL)
-	{
 		IAmiSSLMaster->CloseAmiSSL();
-		AmiSSLBase = NULL;
+		IAmiSSL = NULL;
 	}
 
 	if (IAmiSSLMaster != NULL)

@@ -99,3 +99,5 @@ SSHTerm 1.9 (d.m.2022)
 
 - Updated libssh2 to version 1.10.0.
 
+- Updated to compile with AmiSSL 5.1 SDK.
+
