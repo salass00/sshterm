@@ -7,7 +7,7 @@ DESTDIR='tmp'
 FULLVERS=`version SSHTerm`
 NUMVERS=`echo "${FULLVERS}" | cut -d' ' -f2`
 
-LIBSSH2DIR='libssh2-1.9.0'
+LIBSSH2DIR='libssh2-1.10.0'
 
 ARCHIVE="sshterm-${NUMVERS}.7z"
 

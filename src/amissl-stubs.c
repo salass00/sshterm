@@ -71,6 +71,11 @@ const EVP_CIPHER *EVP_rc4(void)
 	return IAmiSSL->EVP_rc4();
 }
 
+EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
+{
+	return IAmiSSL->PEM_read_bio_PrivateKey(bp, x, cb, u);
+}
+
 DSA *PEM_read_bio_DSAPrivateKey(BIO *bp, DSA **x, pem_password_cb *cb, void *u)
 {
 	return IAmiSSL->PEM_read_bio_DSAPrivateKey(bp, x, cb, u);

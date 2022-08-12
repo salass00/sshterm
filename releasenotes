@@ -97,3 +97,5 @@ SSHTerm 1.9 (d.m.2022)
 
 - Merged custom window title support changes from migthymax.
 
+- Updated libssh2 to version 1.10.0.
+

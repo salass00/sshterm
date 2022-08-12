@@ -4,7 +4,7 @@ STRIP = ppc-amigaos-strip
 TARGET  = SSHTerm
 VERSION = 1
 
-LIBSSH2DIR = libssh2-1.9.0
+LIBSSH2DIR = libssh2-1.10.0
 
 OPTIMIZE = -O2
 DEBUG    = -g
