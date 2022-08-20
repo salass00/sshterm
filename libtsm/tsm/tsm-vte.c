@@ -1,7 +1,7 @@
 /*
  * libtsm - VT Emulator
  *
- * Copyright (c) 2019-2020 Fredrik Wikstrom <fredrik@a500.org>
+ * Copyright (c) 2019-2022 Fredrik Wikstrom <fredrik@a500.org>
  * Copyright (c) 2018 Aetf <aetf@unlimitedcodeworks.xyz>
  * Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
  *

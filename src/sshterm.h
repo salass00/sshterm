@@ -1,7 +1,7 @@
 /*
  * SSHTerm - SSH2 shell client
  *
- * Copyright (C) 2019-2020 Fredrik Wikstrom <fredrik@a500.org>
+ * Copyright (C) 2019-2022 Fredrik Wikstrom <fredrik@a500.org>
  *
  * This program/include file is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
