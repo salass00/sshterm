@@ -47,7 +47,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 	 * disables this by default, why?) and whether we should implement the
 	 * fallback shifting that xterm does. */
 	if (mods & TSM_ALT_MASK)
-		vte->flags |= FLAG_PREPEND_ESCAPE;
+		vte->flags |= TSM_VTE_FLAG_PREPEND_ESCAPE;
 
 	/* A user might actually use multiple layouts for keyboard input. The
 	 * @keysym variable contains the actual keysym that the user used. But
@@ -249,13 +249,13 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 			vte_write(vte, "\x1b", 1);
 			return true;
 		case XKB_KEY_KP_Enter:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE) {
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE) {
 				vte_write(vte, "\eOM", 3);
 				return true;
 			}
 			/* fallthrough */
 		case XKB_KEY_Return:
-			if (vte->flags & FLAG_LINE_FEED_NEW_LINE_MODE)
+			if (vte->flags & TSM_VTE_FLAG_LINE_FEED_NEW_LINE_MODE)
 				vte_write(vte, "\x0d\x0a", 2);
 			else
 				vte_write(vte, "\x0d", 1);
@@ -284,7 +284,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		case XKB_KEY_KP_Up:
 			if (mods & TSM_CONTROL_MASK)
 				vte_write(vte, "\e[1;5A", 6);
-			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			else if (vte->flags & TSM_VTE_FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOA", 3);
 			else
 				vte_write(vte, "\e[A", 3);
@@ -293,7 +293,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		case XKB_KEY_KP_Down:
 			if (mods & TSM_CONTROL_MASK) {
 				vte_write(vte, "\e[1;5B", 6);
-			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			else if (vte->flags & TSM_VTE_FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOB", 3);
 			else
 				vte_write(vte, "\e[B", 3);
@@ -302,7 +302,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		case XKB_KEY_KP_Right:
 			if (mods & TSM_CONTROL_MASK) {
 				vte_write(vte, "\e[1;5C", 6);
-			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			else if (vte->flags & TSM_VTE_FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOC", 3);
 			else
 				vte_write(vte, "\e[C", 3);
@@ -311,106 +311,106 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		case XKB_KEY_KP_Left:
 			if (mods & TSM_CONTROL_MASK) {
 				vte_write(vte, "\e[1;5D", 6);
-			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			else if (vte->flags & TSM_VTE_FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOD", 3);
 			else
 				vte_write(vte, "\e[D", 3);
 			return true;
 		case XKB_KEY_KP_Insert:
 		case XKB_KEY_KP_0:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOp", 3);
 			else
 				vte_write(vte, "0", 1);
 			return true;
 		case XKB_KEY_KP_1:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOq", 3);
 			else
 				vte_write(vte, "1", 1);
 			return true;
 		case XKB_KEY_KP_2:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOr", 3);
 			else
 				vte_write(vte, "2", 1);
 			return true;
 		case XKB_KEY_KP_3:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOs", 3);
 			else
 				vte_write(vte, "3", 1);
 			return true;
 		case XKB_KEY_KP_4:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOt", 3);
 			else
 				vte_write(vte, "4", 1);
 			return true;
 		case XKB_KEY_KP_5:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOu", 3);
 			else
 				vte_write(vte, "5", 1);
 			return true;
 		case XKB_KEY_KP_6:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOv", 3);
 			else
 				vte_write(vte, "6", 1);
 			return true;
 		case XKB_KEY_KP_7:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOw", 3);
 			else
 				vte_write(vte, "7", 1);
 			return true;
 		case XKB_KEY_KP_8:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOx", 3);
 			else
 				vte_write(vte, "8", 1);
 			return true;
 		case XKB_KEY_KP_9:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOy", 3);
 			else
 				vte_write(vte, "9", 1);
 			return true;
 		case XKB_KEY_KP_Subtract:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOm", 3);
 			else
 				vte_write(vte, "-", 1);
 			return true;
 		case XKB_KEY_KP_Separator:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOl", 3);
 			else
 				vte_write(vte, ",", 1);
 			return true;
 		case XKB_KEY_KP_Delete:
 		case XKB_KEY_KP_Decimal:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOn", 3);
 			else
 				vte_write(vte, ".", 1);
 			return true;
 		case XKB_KEY_KP_Equal:
 		case XKB_KEY_KP_Divide:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOj", 3);
 			else
 				vte_write(vte, "/", 1);
 			return true;
 		case XKB_KEY_KP_Multiply:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOo", 3);
 			else
 				vte_write(vte, "*", 1);
 			return true;
 		case XKB_KEY_KP_Add:
-			if (vte->flags & FLAG_KEYPAD_APPLICATION_MODE)
+			if (vte->flags & TSM_VTE_FLAG_KEYPAD_APPLICATION_MODE)
 				vte_write(vte, "\eOk", 3);
 			else
 				vte_write(vte, "+", 1);
@@ -419,7 +419,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		case XKB_KEY_KP_Home:
 			if (mods & TSM_CONTROL_MASK)
 				vte_write(vte, "\e[1;5H", 6);
-			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			else if (vte->flags & TSM_VTE_FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOH", 3);
 			else
 				vte_write(vte, "\e[H", 3);
@@ -428,7 +428,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		case XKB_KEY_KP_End:
 			if (mods & TSM_CONTROL_MASK)
 				vte_write(vte, "\e[1;5F", 6);
-			else if (vte->flags & FLAG_CURSOR_KEY_MODE)
+			else if (vte->flags & TSM_VTE_FLAG_CURSOR_KEY_MODE)
 				vte_write(vte, "\eOF", 3);
 			else
 				vte_write(vte, "\e[F", 3);
@@ -577,7 +577,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 	}
 
 	if (unicode != TSM_VTE_INVALID) {
-		if (vte->flags & FLAG_7BIT_MODE) {
+		if (vte->flags & TSM_VTE_FLAG_7BIT_MODE) {
 			val = unicode;
 			if (unicode & 0x80) {
 				llog_debug(vte, "invalid keyboard input in 7bit mode U+%x; mapping to '?'",
@@ -585,7 +585,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 				val = '?';
 			}
 			vte_write(vte, &val, 1);
-		} else if (vte->flags & FLAG_8BIT_MODE) {
+		} else if (vte->flags & TSM_VTE_FLAG_8BIT_MODE) {
 			val = unicode;
 			if (unicode > 0xff) {
 				llog_debug(vte, "invalid keyboard input in 8bit mode U+%x; mapping to '?'",
@@ -600,7 +600,7 @@ bool tsm_vte_handle_keyboard(struct tsm_vte *vte, uint32_t keysym,
 		return true;
 	}
 
-	vte->flags &= ~FLAG_PREPEND_ESCAPE;
+	vte->flags &= ~TSM_VTE_FLAG_PREPEND_ESCAPE;
 	return false;
 }
 
