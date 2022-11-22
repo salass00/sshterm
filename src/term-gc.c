@@ -626,6 +626,10 @@ static ULONG TERM_set(Class *cl, Object *obj, struct opSet *ops)
 					refresh = TRUE;
 				}
 				break;
+
+			case TERM_BackspaceIsDelete:
+				tsm_vte_set_backspace_sends_delete(td->td_VTE, tag->ti_Data ? true : false);
+				break;
 		}
 	}
 
