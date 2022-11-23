@@ -255,23 +255,54 @@ agent_connect_amiga(LIBSSH2_AGENT *agent)
 {
     struct sockaddr_in sin;
 
-    agent->fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (agent->fd < 0)
+    agent->fd = socket(PF_INET, SOCK_STREAM, 0);
+    if(agent->fd < 0)
         return _libssh2_error(agent->session, LIBSSH2_ERROR_BAD_SOCKET,
                               "failed creating socket");
 
     sin.sin_family      = AF_INET;
-	sin.sin_port        = htons(2100); /* Not sure if hardcoded? */
-	sin.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    if (connect(agent->fd, (struct sockaddr*)&sin, sizeof(sin)) != 0) {
-        close (agent->fd);
+    sin.sin_port        = htons(2100); /* Not sure if hardcoded? */
+    sin.sin_addr.s_addr = inet_addr("127.0.0.1"); /* localhost */
+    if(connect(agent->fd, (struct sockaddr*)(&sin), sizeof(sin)) != 0) {
+        close(agent->fd);
         return _libssh2_error(agent->session, LIBSSH2_ERROR_AGENT_PROTOCOL,
                               "failed connecting with agent");
     }
 
     return LIBSSH2_ERROR_NONE;
 }
+
+#define RECV_SEND_ALL(func, socket, buffer, length, flags, abstract) \
+    int rc;                                                          \
+    size_t finished = 0;                                             \
+                                                                     \
+    while(finished < length) {                                       \
+        rc = func(socket,                                            \
+                  (char *)buffer + finished, length - finished,      \
+                  flags, abstract);                                  \
+        if(rc < 0)                                                   \
+            return rc;                                               \
+                                                                     \
+        finished += rc;                                              \
+    }                                                                \
+                                                                     \
+    return finished;
+
+static ssize_t _send_all(LIBSSH2_SEND_FUNC(func), libssh2_socket_t socket,
+                         const void *buffer, size_t length,
+                         int flags, void **abstract)
+{
+    RECV_SEND_ALL(func, socket, buffer, length, flags, abstract);
+}
+
+static ssize_t _recv_all(LIBSSH2_RECV_FUNC(func), libssh2_socket_t socket,
+                         void *buffer, size_t length,
+                         int flags, void **abstract)
+{
+    RECV_SEND_ALL(func, socket, buffer, length, flags, abstract);
+}
+
+#undef RECV_SEND_ALL
 
 static int
 agent_transact_amiga(LIBSSH2_AGENT *agent, agent_transaction_ctx_t transctx)
@@ -280,34 +311,36 @@ agent_transact_amiga(LIBSSH2_AGENT *agent, agent_transaction_ctx_t transctx)
     int rc;
 
     /* Send the length of the request */
-    if (transctx->state == agent_NB_state_request_created) {
+    if(transctx->state == agent_NB_state_request_created) {
         _libssh2_htonu32(buf, transctx->request_len);
-        rc = LIBSSH2_SEND_FD(agent->session, agent->fd, buf, sizeof buf, 0);
-        if (rc == -EAGAIN)
+        rc = _send_all(agent->session->send, agent->fd,
+                       buf, sizeof buf, 0, &agent->session->abstract);
+        if(rc == -EAGAIN)
             return LIBSSH2_ERROR_EAGAIN;
-        else if (rc < 0)
+        else if(rc < 0)
             return _libssh2_error(agent->session, LIBSSH2_ERROR_SOCKET_SEND,
                                   "agent send failed");
         transctx->state = agent_NB_state_request_length_sent;
     }
 
     /* Send the request body */
-    if (transctx->state == agent_NB_state_request_length_sent) {
-        rc = LIBSSH2_SEND_FD(agent->session, agent->fd, transctx->request,
-                           transctx->request_len, 0);
-        if (rc == -EAGAIN)
+    if(transctx->state == agent_NB_state_request_length_sent) {
+        rc = _send_all(agent->session->send, agent->fd, transctx->request,
+                       transctx->request_len, 0, &agent->session->abstract);
+        if(rc == -EAGAIN)
             return LIBSSH2_ERROR_EAGAIN;
-        else if (rc < 0)
+        else if(rc < 0)
             return _libssh2_error(agent->session, LIBSSH2_ERROR_SOCKET_SEND,
                                   "agent send failed");
         transctx->state = agent_NB_state_request_sent;
     }
 
     /* Receive the length of a response */
-    if (transctx->state == agent_NB_state_request_sent) {
-        rc = LIBSSH2_RECV_FD(agent->session, agent->fd, buf, sizeof buf, 0);
-        if (rc < 0) {
-            if (rc == -EAGAIN)
+    if(transctx->state == agent_NB_state_request_sent) {
+        rc = _recv_all(agent->session->recv, agent->fd,
+                       buf, sizeof buf, 0, &agent->session->abstract);
+        if(rc < 0) {
+            if(rc == -EAGAIN)
                 return LIBSSH2_ERROR_EAGAIN;
             return _libssh2_error(agent->session, LIBSSH2_ERROR_SOCKET_RECV,
                                   "agent recv failed");
@@ -315,18 +348,18 @@ agent_transact_amiga(LIBSSH2_AGENT *agent, agent_transaction_ctx_t transctx)
         transctx->response_len = _libssh2_ntohu32(buf);
         transctx->response = LIBSSH2_ALLOC(agent->session,
                                            transctx->response_len);
-        if (!transctx->response)
+        if(!transctx->response)
             return LIBSSH2_ERROR_ALLOC;
 
         transctx->state = agent_NB_state_response_length_received;
     }
 
     /* Receive the response body */
-    if (transctx->state == agent_NB_state_response_length_received) {
-        rc = LIBSSH2_RECV_FD(agent->session, agent->fd, transctx->response,
-                           transctx->response_len, 0);
-        if (rc < 0) {
-            if (rc == -EAGAIN)
+    if(transctx->state == agent_NB_state_response_length_received) {
+        rc = _recv_all(agent->session->recv, agent->fd, transctx->response,
+                       transctx->response_len, 0, &agent->session->abstract);
+        if(rc < 0) {
+            if(rc == -EAGAIN)
                 return LIBSSH2_ERROR_EAGAIN;
             return _libssh2_error(agent->session, LIBSSH2_ERROR_SOCKET_SEND,
                                   "agent recv failed");
