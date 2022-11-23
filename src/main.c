@@ -40,7 +40,7 @@ static const char template[] =
 	"KEYFILE/K,"
 	"MAXSB/N/K,"
 	"TITLE/K,"
-	"BSISDEL/K";
+	"BSISDEL/S";
 
 enum {
 	ARG_HOSTADDR,

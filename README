@@ -12,7 +12,7 @@ Usage:
 Run from CLI with commandline template:
 
 HOSTADDR/A,PORT/N/K,USER/A,PASSWORD,NOSSHAGENT/S,KEYFILE/K,MAXSB/N/K,TITLE/K,
-BSISDEL/K
+BSISDEL/S
 
 HOSTADDR is the IP address or domain name of the SSH server.
 
