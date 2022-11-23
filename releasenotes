@@ -89,7 +89,7 @@ SSHTerm 1.8 (30.10.2020)
 - Added "Select Font..." menu item.
 
 
-SSHTerm 1.9 (d.m.2022)
+SSHTerm 1.9 (23.11.2022)
 
 - Fixed negative return codes from tsm_screen_selection_copy()/
   tsm_screen_copy_all() not being interpreted correctly due to the result
