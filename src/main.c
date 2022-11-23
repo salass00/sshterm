@@ -39,7 +39,8 @@ static const char template[] =
 	"NOSSHAGENT/S,"
 	"KEYFILE/K,"
 	"MAXSB/N/K,"
-	"TITLE/K";
+	"TITLE/K,"
+	"BSISDEL/K";
 
 enum {
 	ARG_HOSTADDR,
@@ -50,6 +51,7 @@ enum {
 	ARG_KEYFILE,
 	ARG_MAXSB,
 	ARG_TITLE,
+	ARG_BSISDEL,
 	NUM_ARGS
 };
 
@@ -262,6 +264,7 @@ int sshterm(int argc, char **argv)
 	const char *username;
 	char *windowtitle = NULL;
 	LONG sb_size = 2000;
+	BOOL bs_is_del = FALSE;
 	struct Screen *screen = NULL;
 	struct TermWindow *termwin = NULL;
 	struct ssh_session *ss = NULL;
@@ -314,7 +317,12 @@ int sshterm(int argc, char **argv)
 		goto out;
 	}
 
-	termwin = termwin_open(screen, sb_size, windowtitle);
+	if (args[ARG_BSISDEL])
+	{
+		bs_is_del = TRUE;
+	}
+
+	termwin = termwin_open(screen, sb_size, windowtitle, bs_is_del);
 	if (termwin == NULL)
 	{
 		fprintf(stderr, "Failed to create terminal\n");

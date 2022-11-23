@@ -101,3 +101,7 @@ SSHTerm 1.9 (d.m.2022)
 
 - Updated to compile with AmiSSL 5.1 SDK.
 
+- Added BSISDEL switch that makes libtsm send an ASCII delete (0x7f) instead
+  of an ASCII backspace (0x08) character for the backspace key. Enabling this
+  may lead to better compatibility with some remote terminals.
+

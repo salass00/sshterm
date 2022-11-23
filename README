@@ -11,7 +11,8 @@ Usage:
 
 Run from CLI with commandline template:
 
-HOSTADDR/A,PORT/N/K,USER/A,PASSWORD,NOSSHAGENT/S,KEYFILE/K,MAXSB/N/K,TITLE/K
+HOSTADDR/A,PORT/N/K,USER/A,PASSWORD,NOSSHAGENT/S,KEYFILE/K,MAXSB/N/K,TITLE/K,
+BSISDEL/K
 
 HOSTADDR is the IP address or domain name of the SSH server.
 
@@ -40,6 +41,10 @@ following escape sequences:
      to the value set with HOSTADDR.
 - %u for the user name. The value corresponds to the value set with USER.
 - %% for inserting a single percent sign '%' into the window title.
+
+When BSISDEL is enabled SSHTerm will send an ASCII delete (0x7f) instead of an
+ASCII backspace (0x08) character for the backspace key. Enabling this may lead
+to better compatibility with some remote terminals (see "Known issues" below).
 
 To connect to SSH server example.org using port 123 and user name "testuser":
 

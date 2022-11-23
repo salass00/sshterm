@@ -119,7 +119,7 @@ static const struct NewMenu newmenus[] =
 	{ NM_END,   NULL,               NULL, 0,               0,   NULL                                       }
 };
 
-struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb, const char *win_title)
+struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb, const char *win_title, BOOL bs_is_del)
 {
 	struct TermWindow *tw;
 	Object *scroller;
@@ -226,8 +226,9 @@ struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb, const char 
 
 	scroller = (Object *)GET(tw->Window, WINDOW_VertObject);
 	IIntuition->SetAttrs(tw->Term,
-		TERM_MaxScrollback, max_sb,
-		TERM_Scroller,      scroller,
+		TERM_MaxScrollback,     max_sb,
+		TERM_BackspaceIsDelete, bs_is_del,
+		TERM_Scroller,          scroller,
 		TAG_END);
 
 	tw->Columns = (UWORD)GET(tw->Term, TERM_Columns);

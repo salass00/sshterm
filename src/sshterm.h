@@ -64,7 +64,7 @@ void close_interface(struct Interface *interface);
 
 int sshterm(int argc, char **argv);
 
-struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb, const char *win_title);
+struct TermWindow *termwin_open(struct Screen *screen, ULONG max_sb, const char *win_title, BOOL bs_is_del);
 void termwin_close(struct TermWindow *tw);
 void termwin_set_title( struct TermWindow *tw, const char *wintitle);
 void termwin_set_max_sb(struct TermWindow *tw, ULONG max_sb);
