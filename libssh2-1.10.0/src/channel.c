@@ -2031,7 +2031,7 @@ ssize_t _libssh2_channel_read(LIBSSH2_CHANNEL *channel, int stream_id,
 
            We may have a series of packets to read that are still pending even
            if a close has been received. Acknowledging the close too early
-           makes us flush buffers prematurely and loose data.
+           makes us flush buffers prematurely and lose data.
         */
 
         LIBSSH2_PACKET *readpkt = read_packet;

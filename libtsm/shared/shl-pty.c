@@ -43,7 +43,7 @@
  * the client. Instead, we _must_ rely on the PID of the client to track
  * them.
  * However, this has the side effect that if the client forks and the
- * parent exits, we loose them and restart the client. But this seems to
+ * parent exits, we lose them and restart the client. But this seems to
  * be the expected behavior so we implement it here.
  *
  * Unfortunately, epoll always polls for EPOLLHUP so as long as the
@@ -166,7 +166,7 @@ static int pty_init_child(int fd)
 	if (slave < 0)
 		return -errno;
 
-	/* open session so we loose our controlling TTY */
+	/* open session so we lose our controlling TTY */
 	pid = setsid();
 	if (pid < 0) {
 		close(slave);
