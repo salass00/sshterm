@@ -8,3 +8,4 @@ SSHTerm
 SSHTerm.debug
 # Ignore release archives
 *.7z
+*.lha
