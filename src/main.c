@@ -82,10 +82,17 @@ static char *request_password(unsigned int auth_pw, ...)
 
 			buffer[0] = '\0';
 
-			if (auth_pw == AUTH_PUBLICKEY)
-				vsnprintf(bodytext, sizeof(bodytext), "Enter passphrase for key file '%s'", ap);
-			else
-				vsnprintf(bodytext, sizeof(bodytext), "Enter password for %s@%s", ap);
+			switch (auth_pw) {
+				case AUTH_PUBLICKEY:
+					vsnprintf(bodytext, sizeof(bodytext), "Enter passphrase for key file '%s'", ap);
+					break;
+				case AUTH_KEYBOARD_INTERACTIVE:
+					vsnprintf(bodytext, sizeof(bodytext), "Prompt %d/%d from server: '%s'", ap);
+					break;
+				default:
+					vsnprintf(bodytext, sizeof(bodytext), "Enter password for %s@%s", ap);
+					break;
+			}
 
 			reqobj = IIntuition->NewObject(RequesterClass, NULL,
 				REQ_Type,        REQTYPE_STRING,
@@ -227,12 +234,16 @@ static void kbd_callback(const char *name, int name_len, const char *instruction
 	int instruction_len, int num_prompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts,
 	LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses, void **abstract)
 {
-	struct ssh_session *ss = IExec->FindTask(NULL)->tc_UserData;
+	char *prompt, *response;
+	int i;
 
-	if (num_prompts == 1)
-	{
-		responses[0].text   = strdup(ss->password);
-		responses[0].length = strlen(ss->password);
+	for (i = 0; i < num_prompts;  i++) {
+		prompt = strndup(prompts[i].text, prompts[i].length);
+
+		response = request_password(AUTH_KEYBOARD_INTERACTIVE, i, num_prompts, prompt);
+
+		responses[i].text   = response;
+		responses[i].length = strlen(response);
 	}
 }
 
@@ -450,13 +461,6 @@ int sshterm(int argc, char **argv)
 	}
 	else if (auth_pw & AUTH_KEYBOARD_INTERACTIVE)
 	{
-		if (ss->password == NULL)
-		{
-			ss->password = request_password(AUTH_KEYBOARD_INTERACTIVE, username, hostname);
-			if (ss->password == NULL)
-				goto out;
-		}
-
 		rc = libssh2_userauth_keyboard_interactive(ss->session, username, &kbd_callback);
 		if (rc < 0)
 		{
