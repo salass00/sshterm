@@ -240,7 +240,7 @@ static void kbd_callback(const char *name, int name_len, const char *instruction
 	for (i = 0; i < num_prompts;  i++) {
 		prompt = strndup(prompts[i].text, prompts[i].length);
 
-		response = request_password(AUTH_KEYBOARD_INTERACTIVE, i, num_prompts, prompt);
+		response = request_password(AUTH_KEYBOARD_INTERACTIVE, i+1, num_prompts, prompt);
 
 		responses[i].text   = response;
 		responses[i].length = strlen(response);
